@@ -165,11 +165,12 @@ public class Receptionist extends User{
                     ", Total Cost: $" + resident.getTotalCost());
         }
     }
+
     //------TESTCODE------///
 
-        public static void main(String[] args) {
+//        public static void main(String[] args) {
 
-            Receptionist Receptionist = new Receptionist();
+//            Receptionist Receptionist = new Receptionist();
 
             // Test adding residents
             //System.out.println("Testing Add Functionality:");
@@ -178,8 +179,8 @@ public class Receptionist extends User{
             //Receptionist.addResident("ali", "01098765432", 7, 350.00);
 
             // View the list of residents in the system
-            System.out.println("\nCurrent List of Residents:");
-            Receptionist.viewResidentDetails();
+//            System.out.println("\nCurrent List of Residents:");
+//            Receptionist.viewResidentDetails();
 
             // Test editing a resident's details
            //System.out.println("\nTesting Edit Functionality:");
@@ -190,13 +191,13 @@ public class Receptionist extends User{
             //Receptionist.viewResidentDetails();
 
             // Test deleting a resident
-           System.out.println("\nTesting Delete Functionality:");
-           Receptionist.deleteResident("Jane Smith");
-
-            // View the final list of residents
-          System.out.println("\nFinal List of Residents:");
-           Receptionist.viewResidentDetails();
-        }
+//           System.out.println("\nTesting Delete Functionality:");
+//           Receptionist.deleteResident("Jane Smith");
+//
+//            // View the final list of residents
+//          System.out.println("\nFinal List of Residents:");
+//           Receptionist.viewResidentDetails();
+//        }
 
 
 }

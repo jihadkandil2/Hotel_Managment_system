@@ -39,6 +39,5 @@ public class RealResidentDataFetcher implements ResidentDataFetcher{
         }
 
         return residents;
-
     }
 }
