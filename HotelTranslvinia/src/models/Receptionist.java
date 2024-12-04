@@ -2,9 +2,11 @@ package models;
 
 import main.Database;
 import models.ProxyFiles.ProxyResidentDataFetcher;
+import models.ProxyFiles.ProxyRoomDatabase;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +28,7 @@ public class Receptionist extends User{
         super();
         this.residentList = new ArrayList<>(); // Initialize the resident list
        this.resident = new Resident(); // Initialize the resident object
-      this.fetcher = new ProxyResidentDataFetcher();
+       this.fetcher = new ProxyResidentDataFetcher();
         this.residentList = fetcher.fetchResidents();
         //fetcher = new ProxyResidentDataFetcher(resident.getResidentName());
     }
@@ -43,9 +45,11 @@ public class Receptionist extends User{
     public String getPhone() {
         return phone;
     }
+
     public void setPhone(String phone) {
         this.phone = phone;
     }
+
     public void addResident(String name, String phone, int durationStay, double totalCost) {
         Resident resident = new Resident();
 
@@ -63,6 +67,7 @@ public class Receptionist extends User{
 
         System.out.println("Resident: " + name + " added successfully.");
     }
+
     // Database insertion logic
     private void addResidentToDatabase(Resident resident) {
         try (Connection connection = Database.getConnection()) {
@@ -81,6 +86,7 @@ public class Receptionist extends User{
             System.err.println("Error adding resident to the database: " + e.getMessage());
         }
     }
+
     // Edit an existing resident's details
     public void editResident(String residentName, String newPhone, int newDurationStay, double newTotalCost) {
         for (Resident resident : residentList) {
@@ -99,6 +105,7 @@ public class Receptionist extends User{
         }
         System.out.println("Resident not found: " + residentName);
     }
+
     // Database code for editing a resident
     private void editResidentToDatabase(Resident resident) {
         try (Connection connection = Database.getConnection()) {
@@ -121,6 +128,7 @@ public class Receptionist extends User{
             e.printStackTrace();
         }
     }
+
     // Delete a resident from the resident list
     public void deleteResident(String residentName) {
         for (Resident resident : residentList) {
@@ -135,6 +143,7 @@ public class Receptionist extends User{
         }
         System.out.println("Resident not found: " + residentName);
     }
+
     // Database code for deleting a resident
     private void deleteResidentFromDatabase(String residentName) {
         try (Connection connection = Database.getConnection()) {
@@ -166,38 +175,102 @@ public class Receptionist extends User{
         }
     }
 
-    //------TESTCODE------///
+    //DataBase CODE
+    private List<Room> checkAvailableRoom(String roomType) {
+        ProxyRoomDatabase proxyRoomDatabase = new ProxyRoomDatabase();
 
-//        public static void main(String[] args) {
+        // Step 1: Fetch all rooms using the proxy
+        List<Room> availableRooms = proxyRoomDatabase.fetchAllRooms();
 
-//            Receptionist Receptionist = new Receptionist();
+        // Step 2: Loop through the list and filter based on room type and availability (i.e., is_occupied = 0)
+        availableRooms.removeIf(room -> room.getIsOccupied() == 1 || !room.getRoomType().equalsIgnoreCase(roomType));
 
-            // Test adding residents
-            //System.out.println("Testing Add Functionality:");
-            //Receptionist.addResident("Jihaaad", "01112345678", 5, 250.00);
-            //Receptionist.addResident("salmaa", "01234567890", 3, 150.00);
-            //Receptionist.addResident("ali", "01098765432", 7, 350.00);
+        // Step 3: Check if we have any available rooms
+        if (availableRooms.isEmpty()) {
+            System.out.println("No available rooms of type " + roomType + " to assign.");
+            return null;
+        }
 
-            // View the list of residents in the system
-//            System.out.println("\nCurrent List of Residents:");
-//            Receptionist.viewResidentDetails();
+        return availableRooms;
+    }
 
-            // Test editing a resident's details
-           //System.out.println("\nTesting Edit Functionality:");
-           // Receptionist.editResident("John Doe", "01199999999", 100, 300.00);
+    //DATABASE CODE
+    private void makeOccubied(Room choosedRoom)
+    {
+        ProxyRoomDatabase proxyRoomDatabase = new ProxyRoomDatabase();
+        proxyRoomDatabase.editRoom(choosedRoom.getRoomNum(), choosedRoom.getRoomType(), choosedRoom.getRoomPrice(), 1);
+        System.out.println("Room : " + choosedRoom.getRoomNum() + " is occubied now" );
+    }
 
-            // View the updated list of residents
-           // System.out.println("\nUpdated List of Residents:");
-            //Receptionist.viewResidentDetails();
+    public void assignRoomToResident(Resident resident , String roomType) {
+        // step check available one
+        List<Room> availableRooms = checkAvailableRoom(roomType);
+        if (availableRooms.isEmpty()) {
+            return;
+        }
 
-            // Test deleting a resident
-//           System.out.println("\nTesting Delete Functionality:");
-//           Receptionist.deleteResident("Jane Smith");
-//
-//            // View the final list of residents
-//          System.out.println("\nFinal List of Residents:");
-//           Receptionist.viewResidentDetails();
-//        }
+        // Assign the first available room (can be modified for custom selection)
+        Room availableRoom = availableRooms.get(0);
+
+        System.out.println("Assigning room " + availableRoom.getRoomNum() + " to resident " + resident.getResidentName());
+        resident.setAssignedRoom(availableRoom.getRoomNum());
+
+        // Step 3: Update the room as occupied using the proxy
+        makeOccubied(availableRoom);
+
+        // Step 4: Calculate and update total cost
+        int totalCost = availableRoom.getRoomPrice() * resident.getDurationStay();
+        resident.setTotalCost(totalCost);
+
+        System.out.println("Room assigned successfully!");
+        System.out.println("Updated Total Cost: $" + totalCost);
+    }
+
+    // Fetch an available room from the database
+    private Room fetchAvailableRoom() {
+        String fetchQuery = "SELECT * FROM room WHERE is_occupied = 0 LIMIT 1";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement fetchStmt = connection.prepareStatement(fetchQuery)) {
+
+            ResultSet rs = fetchStmt.executeQuery();
+            if (rs.next()) {
+                Room room = new Room() {
+                    @Override
+                    public int checkAvilability() {
+                        return 0;
+                    }
+                };
+                room.setRoomNum(rs.getString("room_num"));
+                room.setRoomType(rs.getString("room_type"));
+                room.setRoomPrice(rs.getInt("room_price"));
+                room.setIsOccupied(rs.getInt("is_occupied"));
+                return room;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error while fetching available room: " + e.getMessage());
+        }
+        return null; // No available room
+    }
+
+    // Mark a room as occupied in the database
+    private void markRoomAsOccupied(String roomNum) {
+        String updateQuery = "UPDATE room SET is_occupied = 1 WHERE room_num = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
+
+            updateStmt.setString(1, roomNum);
+            int rowsUpdated = updateStmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("Room " + roomNum + " marked as occupied in the database.");
+            } else {
+                System.err.println("Failed to mark room " + roomNum + " as occupied.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error while marking room as occupied: " + e.getMessage());
+        }
+    }
 
 
 }

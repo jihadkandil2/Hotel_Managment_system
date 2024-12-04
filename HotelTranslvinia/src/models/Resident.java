@@ -5,6 +5,7 @@ public class Resident {
     private String residentPhone;
     private int DurationStay;
     private double TotalCost ;
+    private String assignedRoom;
 
     public int getDurationStay() {
         return DurationStay;
@@ -36,5 +37,13 @@ public class Resident {
 
     public void setTotalCost(double totalCost) {
         TotalCost = totalCost;
+    }
+
+    public String getAssignedRoom() {
+        return assignedRoom;
+    }
+
+    public void setAssignedRoom(String assignedRoom) {
+        this.assignedRoom = assignedRoom;
     }
 }
