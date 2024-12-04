@@ -4,9 +4,10 @@ import models.Room;
 
 //Full -> 2 * main price of room
 public class FullService extends BoardingRoomDecorator {
+    private final int FullServiceCost = 4 * getRoomPrice();
     public FullService(Room room) {
         super(room);
-        room.setRoomPrice(room.getRoomPrice() + ( 3 * getRoomPrice() ) ); // Add cost for Full Service
+       // room.setRoomPrice(room.getRoomPrice() + ( 3 * getRoomPrice() ) ); // Add cost for Full Service
     }
 
     @Override
@@ -18,16 +19,19 @@ public class FullService extends BoardingRoomDecorator {
 
     @Override
     public String getRoomNum() {
-        return super.getRoomNum();
+        return decoratedRoom.getRoomNum();
     }
 
     @Override
     public int getIsOccupied() {
-        return super.getIsOccupied();
+        return decoratedRoom.getIsOccupied();
     }
 
     @Override
     public int getRoomPrice() {
-        return super.getRoomPrice();
+        return decoratedRoom.getRoomPrice();
+    }
+    public int getTotalCost() {
+        return decoratedRoom.getTotalCost()+FullServiceCost ;
     }
 }

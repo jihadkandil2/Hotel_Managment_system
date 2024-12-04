@@ -18,4 +18,7 @@ public abstract class BoardingRoomDecorator extends Room {
         return decoratedRoom.getIsOccupied();
     }
 
+    public int getTotalCost() {
+        return decoratedRoom.getTotalCost();
+    }
 }

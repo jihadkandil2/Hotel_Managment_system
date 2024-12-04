@@ -3,10 +3,10 @@ package models.Decorator;
 import models.Room;
 
 public class BedAndBreakfastService extends BoardingRoomDecorator {
-
+    private final int breakfastCost = 2 * getRoomPrice(); // Fixed cost for Bed and Breakfast
     public BedAndBreakfastService(Room room) {
         super(room);
-        room.setRoomPrice(room.getRoomPrice() + ( 2 * getRoomPrice() )); // Add cost for B&B
+       // room.setRoomPrice(room.getRoomPrice() + ( 2 * getRoomPrice() )); // Add cost for B&B
     }
 
     @Override
@@ -27,6 +27,9 @@ public class BedAndBreakfastService extends BoardingRoomDecorator {
     @Override
     public int getIsOccupied() {
         return decoratedRoom.getIsOccupied();
+    }
+    public int getTotalCost() {
+        return decoratedRoom.getTotalCost() + breakfastCost; // Add B&B cost to the decorated room's total
     }
 }
 
