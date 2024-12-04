@@ -21,10 +21,5 @@ public class RoomFactory {
                 throw new IllegalArgumentException("Invalid room type: " + roomType);
         }
     }
-<<<<<<< HEAD
-=======
 
-
-
->>>>>>> e7b41273bd99bb0d7767bad6d51a9eaff9a283d6
 }

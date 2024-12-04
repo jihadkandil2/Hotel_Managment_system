@@ -176,6 +176,7 @@ public class Receptionist extends User{
                     ", Total Cost: $" + resident.getTotalCost());
         }
     }
+
     public int TotalCost(Room room) {
         if (room == null) {
             throw new IllegalArgumentException("Room cannot be null");
@@ -187,29 +188,10 @@ public class Receptionist extends User{
         return totalCost;
     }
 
-<<<<<<< HEAD
+
     //DataBase CODE
     private List<Room> checkAvailableRoom(String roomType) {
         ProxyRoomDatabase proxyRoomDatabase = new ProxyRoomDatabase();
-=======
-    public static void main(String[] args) {
-        Receptionist receptionist = new Receptionist();
-
-        // Create a base room
-        Room singleRoom = new SingleRoom();
-        System.out.println("Original Room: " + singleRoom.getRoomType() + ", Total Cost: " + receptionist.TotalCost(singleRoom));
-
-        // Add Bed and Breakfast Service
-        Room bnbRoom = new BedAndBreakfastService(singleRoom);
-        System.out.println("Room with B&B: " + bnbRoom.getRoomType() + ", Total Cost: " + receptionist.TotalCost(bnbRoom));
-
-        // Add another Bed and Breakfast Service (stacking)
-        Room bnbRoom2 = new BedAndBreakfastService(bnbRoom);
-        System.out.println("Room with two B&B services: " + bnbRoom2.getRoomType() + ", Total Cost: " + receptionist.TotalCost(bnbRoom2));
-    }
-    //------TESTCODE------///
->>>>>>> e7b41273bd99bb0d7767bad6d51a9eaff9a283d6
-
         // Step 1: Fetch all rooms using the proxy
         List<Room> availableRooms = proxyRoomDatabase.fetchAllRooms();
 
@@ -221,12 +203,12 @@ public class Receptionist extends User{
             System.out.println("No available rooms of type " + roomType + " to assign.");
             return null;
         }
-
         return availableRooms;
     }
 
+
     //DATABASE CODE
-    private void makeOccubied(Room choosedRoom)
+    private void makeRoomOccubied(Room choosedRoom)
     {
         ProxyRoomDatabase proxyRoomDatabase = new ProxyRoomDatabase();
         proxyRoomDatabase.editRoom(choosedRoom.getRoomNum(), choosedRoom.getRoomType(), choosedRoom.getRoomPrice(), 1);
@@ -236,7 +218,7 @@ public class Receptionist extends User{
     public void assignRoomToResident(Resident resident , String roomType) {
         // step check available one
         List<Room> availableRooms = checkAvailableRoom(roomType);
-        if (availableRooms.isEmpty()) {
+        if (availableRooms == null) {
             return;
         }
 
@@ -247,61 +229,13 @@ public class Receptionist extends User{
         resident.setAssignedRoom(availableRoom.getRoomNum());
 
         // Step 3: Update the room as occupied using the proxy
-        makeOccubied(availableRoom);
+        makeRoomOccubied(availableRoom);
 
         // Step 4: Calculate and update total cost
-        int totalCost = availableRoom.getRoomPrice() * resident.getDurationStay();
+        int totalCost = TotalCost(availableRoom);
         resident.setTotalCost(totalCost);
 
         System.out.println("Room assigned successfully!");
         System.out.println("Updated Total Cost: $" + totalCost);
     }
-
-    // Fetch an available room from the database
-    private Room fetchAvailableRoom() {
-        String fetchQuery = "SELECT * FROM room WHERE is_occupied = 0 LIMIT 1";
-        try (Connection connection = Database.getConnection();
-             PreparedStatement fetchStmt = connection.prepareStatement(fetchQuery)) {
-
-            ResultSet rs = fetchStmt.executeQuery();
-            if (rs.next()) {
-                Room room = new Room() {
-                    @Override
-                    public int checkAvilability() {
-                        return 0;
-                    }
-                };
-                room.setRoomNum(rs.getString("room_num"));
-                room.setRoomType(rs.getString("room_type"));
-                room.setRoomPrice(rs.getInt("room_price"));
-                room.setIsOccupied(rs.getInt("is_occupied"));
-                return room;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.err.println("Error while fetching available room: " + e.getMessage());
-        }
-        return null; // No available room
-    }
-
-    // Mark a room as occupied in the database
-    private void markRoomAsOccupied(String roomNum) {
-        String updateQuery = "UPDATE room SET is_occupied = 1 WHERE room_num = ?";
-        try (Connection connection = Database.getConnection();
-             PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
-
-            updateStmt.setString(1, roomNum);
-            int rowsUpdated = updateStmt.executeUpdate();
-            if (rowsUpdated > 0) {
-                System.out.println("Room " + roomNum + " marked as occupied in the database.");
-            } else {
-                System.err.println("Failed to mark room " + roomNum + " as occupied.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.err.println("Error while marking room as occupied: " + e.getMessage());
-        }
-    }
-
-
 }
