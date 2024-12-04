@@ -5,10 +5,10 @@ import models.Room;
 
 //Half -> 1 * main price
 public class HalfService extends BoardingRoomDecorator{
-
+    private final int HalfServiceCost = 3 * getRoomPrice();
     public HalfService(Room room) {
         super(room);
-        decoratedRoom.setRoomPrice(2 * (decoratedRoom.getRoomPrice()) ); // Add cost for Half Service
+       // decoratedRoom.setRoomPrice(2 * (decoratedRoom.getRoomPrice()) ); // Add cost for Half Service
     }
 
 
@@ -30,5 +30,8 @@ public class HalfService extends BoardingRoomDecorator{
     @Override
     public int getIsOccupied() {
         return decoratedRoom.getIsOccupied();
+    }
+    public int getTotalCost() {
+        return decoratedRoom.getTotalCost()+HalfServiceCost ;
     }
 }

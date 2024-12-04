@@ -1,6 +1,8 @@
 package models;
 
 import main.Database;
+import models.Decorator.BedAndBreakfastService;
+import models.Factory.SingleRoom;
 import models.ProxyFiles.ProxyResidentDataFetcher;
 import models.ProxyFiles.ProxyRoomDatabase;
 
@@ -174,10 +176,39 @@ public class Receptionist extends User{
                     ", Total Cost: $" + resident.getTotalCost());
         }
     }
+    public int TotalCost(Room room) {
+        if (room == null) {
+            throw new IllegalArgumentException("Room cannot be null");
+        }
+        System.out.println("Calculating total cost:");
+        System.out.println("Room Type: " + room.getRoomType());
+        int totalCost = room.getTotalCost();
+        System.out.println("Total Cost: $" + totalCost);
+        return totalCost;
+    }
 
+<<<<<<< HEAD
     //DataBase CODE
     private List<Room> checkAvailableRoom(String roomType) {
         ProxyRoomDatabase proxyRoomDatabase = new ProxyRoomDatabase();
+=======
+    public static void main(String[] args) {
+        Receptionist receptionist = new Receptionist();
+
+        // Create a base room
+        Room singleRoom = new SingleRoom();
+        System.out.println("Original Room: " + singleRoom.getRoomType() + ", Total Cost: " + receptionist.TotalCost(singleRoom));
+
+        // Add Bed and Breakfast Service
+        Room bnbRoom = new BedAndBreakfastService(singleRoom);
+        System.out.println("Room with B&B: " + bnbRoom.getRoomType() + ", Total Cost: " + receptionist.TotalCost(bnbRoom));
+
+        // Add another Bed and Breakfast Service (stacking)
+        Room bnbRoom2 = new BedAndBreakfastService(bnbRoom);
+        System.out.println("Room with two B&B services: " + bnbRoom2.getRoomType() + ", Total Cost: " + receptionist.TotalCost(bnbRoom2));
+    }
+    //------TESTCODE------///
+>>>>>>> e7b41273bd99bb0d7767bad6d51a9eaff9a283d6
 
         // Step 1: Fetch all rooms using the proxy
         List<Room> availableRooms = proxyRoomDatabase.fetchAllRooms();

@@ -40,6 +40,8 @@ public abstract class Room {
         this.isOccupied = isOccupied;
     }
 
-
+    public int getTotalCost() {
+        return roomPrice;
+    }
 
 }
