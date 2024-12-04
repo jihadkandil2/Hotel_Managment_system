@@ -16,4 +16,18 @@ public class FullService extends BoardingRoomDecorator {
 
     }
 
+    @Override
+    public String getRoomNum() {
+        return super.getRoomNum();
+    }
+
+    @Override
+    public int getIsOccupied() {
+        return super.getIsOccupied();
+    }
+
+    @Override
+    public int getRoomPrice() {
+        return super.getRoomPrice();
+    }
 }

@@ -13,6 +13,21 @@ public class BedAndBreakfastService extends BoardingRoomDecorator {
     public String getRoomType() {
         return decoratedRoom.getRoomType() + " with Bed & Breakfast";
     }
+
+    @Override
+    public String getRoomNum() {
+        return decoratedRoom.getRoomNum();
+    }
+
+    @Override
+    public int getRoomPrice() {
+        return decoratedRoom.getRoomPrice();
+    }
+
+    @Override
+    public int getIsOccupied() {
+        return decoratedRoom.getIsOccupied();
+    }
 }
 
 

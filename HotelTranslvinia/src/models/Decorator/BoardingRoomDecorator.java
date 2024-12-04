@@ -1,5 +1,6 @@
 package models.Decorator;
 
+import models.Factory.RoomFactory;
 import models.Room;
 
 //Full -> 3 * main price of room
@@ -16,4 +17,5 @@ public abstract class BoardingRoomDecorator extends Room {
     public int checkAvilability() {
         return decoratedRoom.getIsOccupied();
     }
+
 }
