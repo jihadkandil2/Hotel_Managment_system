@@ -6,6 +6,18 @@ public class Resident {
     private int DurationStay;
     private double TotalCost ;
     private String roomType;
+    private String ServiceType ;
+    //link var (service type)
+    //totalCost
+
+
+    public String getServiceType() {
+        return ServiceType;
+    }
+
+    public void setServiceType(String serviceTyoe) {
+        ServiceType = serviceTyoe;
+    }
 
     public int getDurationStay() {
         return DurationStay;

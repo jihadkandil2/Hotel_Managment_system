@@ -2,7 +2,7 @@ package models.Decorator;
 
 import models.Room;
 
-//Full -> 2 * main price of room
+//Full -> 4 * main price of room
 public class FullService extends BoardingRoomDecorator {
     private final int FullServiceCost = 4 * getRoomPrice();
     public FullService(Room room) {

@@ -6,6 +6,7 @@ import models.Receptionist;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,5 +40,65 @@ public class RealReciptionistDataFetcher implements ReceptionistDataFetcher {
         }
 
         return receptionists;
+    }
+
+    @Override
+    public void addReceptionistToDatabase(Receptionist receptionist) {
+        try (Connection connection = Database.getConnection()) {
+            String query = "INSERT INTO users (userName, email, phone, password, role ,Salary) VALUES (?, ?, ?, ?, ?, ?)";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, receptionist.getUserName());
+
+            statement.setString(2, receptionist.getEmail());
+            statement.setString(3, receptionist.getPhone());
+            statement.setString(4, receptionist.getPassword());
+            statement.setString(5, receptionist.getRole());
+            statement.setInt(6, receptionist.getSalary());
+            statement.executeUpdate();
+            System.out.println("Receptionist [ " + receptionist.getUserName()+" ] added to the database successfully.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void editReceptionistToDatabase(Receptionist receptionist) {
+        try (Connection connection = Database.getConnection()) {
+            String query = "UPDATE users SET  password = ? , Salary = ?, phone = ? WHERE userName = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, receptionist.getPassword());
+            statement.setInt(2, receptionist.getSalary());
+            statement.setString(3, receptionist.getPhone());
+            statement.setString(4, receptionist.getUserName()); // Set the value for userName (fourth parameter)
+
+            int rowsUpdated = statement.executeUpdate();
+
+            if (rowsUpdated > 0) {
+                System.out.println("Receptionist details updated successfully in the database: " + receptionist.getUserName());
+            } else {
+                System.out.println("Failed to update the receptionist details in the database: " + receptionist.getUserName());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void deleteReceptionistFromDatabase(String userName) {
+        try (Connection connection = Database.getConnection()) {
+            String query = "DELETE FROM users WHERE userName = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, userName); // Set the value for userName
+
+            int rowsDeleted = statement.executeUpdate();
+
+            if (rowsDeleted > 0) {
+                System.out.println("Receptionist deleted successfully from the database: " + userName);
+            } else {
+                System.out.println("Failed to delete the receptionist from the database: " + userName);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

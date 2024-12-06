@@ -2,6 +2,10 @@ package models;
 
 import main.Database;
 import models.Decorator.BedAndBreakfastService;
+import models.Decorator.BoardingRoomDecorator;
+import models.Decorator.FullService;
+import models.Decorator.HalfService;
+import models.Factory.RoomFactory;
 import models.Factory.SingleRoom;
 import models.ProxyFiles.ProxyResidentDataFetcher;
 import models.ProxyFiles.ProxyRoomDatabase;
@@ -24,7 +28,7 @@ public class Receptionist extends User{
     private int salary;
     private String phone;
     private Resident resident;
-    private Room roomObj;
+    private Room availableRoom;
     private List<Resident> residentList;
     private ResidentDataFetcher proxyFetcher;
     public Receptionist() {
@@ -105,15 +109,33 @@ public class Receptionist extends User{
     }
 
     //giving a room and duration stay we multiply cost with number of nights
-    public int CalcTotalCost(Room room  , int durationStay) {
+    private int CalcTotalCostWithout_Service(Room room  , int durationStay ) {
         if (room == null) {
             throw new IllegalArgumentException("Room type cannot be null");
         }
-        int totalCost = room.getTotalCost() * durationStay;
+
+        int totalCost = room.getTotalCost() * durationStay  ;
         System.out.println("Total Cost: $" + totalCost);
         return totalCost;
     }
 
+    //giving a room and duration stay and service we multiply cost(room+service) with number of nights
+    private int CalcTotalCostWith_Service(Resident resident) {
+        int totalCost =0 ;
+        BoardingRoomDecorator decorator ;
+        if (resident.getServiceType().equalsIgnoreCase("FullService") )
+        {
+            decorator = new FullService(availableRoom);
+        }
+        else if(resident.getServiceType().equalsIgnoreCase("HalfService")){
+            decorator = new HalfService(availableRoom);
+        }
+        else {
+            decorator = new BedAndBreakfastService(availableRoom);
+        }
+        totalCost = decorator.getTotalCost() * resident.getDurationStay();
+        return totalCost;
+    }
 
     //DataBase CODE
     private List<Room> checkAvailableRoom(String roomType) {
@@ -146,8 +168,10 @@ public class Receptionist extends User{
     //[2] if no matches say sorry
     //[3] if matched take first one
     //[4] room must be occupied now
-    //[5] then calc totalcost for him
-    //[6] add him in the system (database)
+    //[5] check if (!service) =>  calcTotalCostWithoutDecoration
+    //[6] if (service) =>  calcCostWithDecorated
+    //[7] add him in the system (database)
+
     public void residentCheckIn(Resident resident ) {
         // step check available one
         List<Room> availableRooms = checkAvailableRoom(resident.getRoomType());
@@ -156,15 +180,21 @@ public class Receptionist extends User{
         }
 
         // Assign the first available room (can be modified for custom selection)
-        Room availableRoom = availableRooms.get(0);
+        availableRoom = availableRooms.get(0);
         makeRoomOccubied(availableRoom);
-        int totalCost = CalcTotalCost(availableRoom , resident.getDurationStay()) ;
+
+        //check on service
+        int totalCost =0;
+        if (resident.getServiceType() ==null)
+        {
+             totalCost = CalcTotalCostWithout_Service(availableRoom , resident.getDurationStay() ) ;
+        }
+        else {
+            totalCost = CalcTotalCostWith_Service(resident);
+        }
+
         resident.setTotalCost(totalCost);
-       // resident.setRoomType(availableRoom.getRoomNum());
-//        addResident(resident.getResidentName(),resident.getResidentPhone(),resident.getDurationStay(),totalCost);
         addResidentToDatabase(resident);
-
-
         System.out.println("Room assigned successfully!");
 
     }
