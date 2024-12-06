@@ -11,17 +11,14 @@ public class ProxyRoomDatabase implements RoomDataBaseService{
     @Override
     public List<Room> fetchAllRooms() {
         if (cachedRooms == null) {
-            System.out.println("Fetching data from the database...");
             realRoomDatabaseService = new RealRoomDataBaseService();
             cachedRooms = realRoomDatabaseService.fetchAllRooms();
         }
-        System.out.println("Returning cached room data...");
         return cachedRooms;
     }
 
     @Override
     public void editRoom(String roomNum, String roomType, int price, int isOccupied) {
-        System.out.println("Updating room data in the database...");
         if (realRoomDatabaseService == null) {
             realRoomDatabaseService = new RealRoomDataBaseService();
         }

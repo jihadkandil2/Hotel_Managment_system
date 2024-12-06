@@ -14,7 +14,6 @@ public class Database {
         if (connection == null || connection.isClosed()) {
             connection = DriverManager.getConnection(URL, USER, PASSWORD);
         }
-        System.out.println("Connection to database established successfully!");
         return connection;
     }
 

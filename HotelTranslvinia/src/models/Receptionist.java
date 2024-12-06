@@ -5,6 +5,7 @@ import models.Decorator.BedAndBreakfastService;
 import models.Factory.SingleRoom;
 import models.ProxyFiles.ProxyResidentDataFetcher;
 import models.ProxyFiles.ProxyRoomDatabase;
+import models.ProxyFiles.ResidentDataFetcher;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,14 +26,12 @@ public class Receptionist extends User{
     private Resident resident;
     private Room roomObj;
     private List<Resident> residentList;
-    private ProxyResidentDataFetcher fetcher;
+    private ResidentDataFetcher proxyFetcher;
     public Receptionist() {
         super();
         this.residentList = new ArrayList<>(); // Initialize the resident list
-       this.resident = new Resident(); // Initialize the resident object
-       this.fetcher = new ProxyResidentDataFetcher();
-        this.residentList = fetcher.fetchResidents();
-        //fetcher = new ProxyResidentDataFetcher(resident.getResidentName());
+        this.resident = new Resident(); // Initialize the resident object
+        this.proxyFetcher = new ProxyResidentDataFetcher();
     }
 
     // Getters and Setters
@@ -52,34 +51,18 @@ public class Receptionist extends User{
         this.phone = phone;
     }
 
-    public void addResident(String name, String phone, int durationStay, double totalCost) {
-        Resident resident = new Resident();
-
-        // Set resident details
-        resident.setResidentName(name);
-        resident.setResidentPhone(phone);
-        resident.setDurationStay(durationStay);
-        resident.setTotalCost(totalCost);
-
-        // Add resident to the local list
-        residentList.add(resident);
-
-        // Add the resident to the database
-        addResidentToDatabase(resident);
-
-        System.out.println("Resident: " + name + " added successfully.");
-    }
 
     // Database insertion logic
     private void addResidentToDatabase(Resident resident) {
         try (Connection connection = Database.getConnection()) {
-            String query = "INSERT INTO resident (name, phone, duration_stay, total_cost) VALUES (?, ?, ?, ?)";
+            String query = "INSERT INTO resident (name, phone, duration_stay ,total_cost,assignedRoom) VALUES (?, ?, ?, ?,?)";
             PreparedStatement statement = connection.prepareStatement(query);
 
             statement.setString(1, resident.getResidentName());
             statement.setString(2, resident.getResidentPhone());
             statement.setInt(3, resident.getDurationStay());
             statement.setDouble(4, resident.getTotalCost());
+            statement.setString(5,resident.getRoomType());
 
             statement.executeUpdate();
             System.out.println("Resident added to the database successfully.");
@@ -89,101 +72,44 @@ public class Receptionist extends User{
         }
     }
 
-    // Edit an existing resident's details
-    public void editResident(String residentName, String newPhone, int newDurationStay, double newTotalCost) {
-        for (Resident resident : residentList) {
 
-            if(resident instanceof Resident && resident.getResidentName().equals(residentName)) {
-
-                // Update in-memory data
-                resident.setResidentPhone(newPhone);
-                resident.setDurationStay(newDurationStay);
-                resident.setTotalCost(newTotalCost);
-
-                // Update in the database
-                editResidentToDatabase(resident);
-                return;
-            }
-        }
-        System.out.println("Resident not found: " + residentName);
+    //open connection
+    //set query string update on table with parameters [] where []
+    // execute update statment
+    public void editResident(Resident resident , String newName ,String newPhone) {
+       proxyFetcher.editResidentToDatabase(resident , newName , newPhone);
     }
 
-    // Database code for editing a resident
-    private void editResidentToDatabase(Resident resident) {
-        try (Connection connection = Database.getConnection()) {
-            String query = "UPDATE resident SET phone = ?, duration_stay = ?, total_cost = ? WHERE name = ?";
-            PreparedStatement statement = connection.prepareStatement(query);
-
-            statement.setString(1, resident.getResidentPhone());
-            statement.setInt(2, resident.getDurationStay());
-            statement.setDouble(3, resident.getTotalCost());
-            statement.setString(4, resident.getResidentName());
-
-            int rowsUpdated = statement.executeUpdate();
-
-            if (rowsUpdated > 0) {
-                System.out.println("Resident details updated successfully in the database: " + resident.getResidentName());
-            } else {
-                System.out.println("Failed to update the resident details in the database: " + resident.getResidentName());
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Delete a resident from the resident list
-    public void deleteResident(String residentName) {
-        for (Resident resident : residentList) {
-            if (resident.getResidentName().equals(residentName)) {
-                // Remove from in-memory list
-                residentList.remove(resident);
-
-                // Remove from the database
-                deleteResidentFromDatabase(residentName);
-                return;
-            }
-        }
-        System.out.println("Resident not found: " + residentName);
-    }
 
     // Database code for deleting a resident
-    private void deleteResidentFromDatabase(String residentName) {
-        try (Connection connection = Database.getConnection()) {
-            String query = "DELETE FROM resident WHERE name = ?";
-            PreparedStatement statement = connection.prepareStatement(query);
-
-            statement.setString(1, residentName);
-
-            int rowsDeleted = statement.executeUpdate();
-
-            if (rowsDeleted > 0) {
-                System.out.println("Resident deleted successfully from the database: " + residentName);
-            } else {
-                System.out.println("Failed to delete the resident from the database: " + residentName);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public void deleteResident(String residentName) {
+        proxyFetcher.deleteResidentFromDatabase(residentName);
     }
 
-    // View details of all residents
+    //use proxy to fetch resident from database in a list
+    // print the list content
     public void viewResidentDetails() {
+        residentList =proxyFetcher.fetchResidents();
+
         System.out.println("List of Residents:");
         for (Resident resident : residentList) {
             System.out.println("Name: " + resident.getResidentName() +
-                    ", Phone: " + resident.getResidentPhone() +
-                    ", Duration of Stay: " + resident.getDurationStay() +
-                    ", Total Cost: $" + resident.getTotalCost());
+                    ", Phone: " +
+                    resident.getResidentPhone() +
+                    ", Duration of Stay: " +
+                    resident.getDurationStay() +
+                    ", Total Cost: $" +
+                    resident.getTotalCost() +
+                    ", Room = " + resident.getRoomType() );
         }
     }
 
-    public int TotalCost(Room room) {
+    //giving a room and duration stay we multiply cost with number of nights
+    public int CalcTotalCost(Room room  , int durationStay) {
         if (room == null) {
-            throw new IllegalArgumentException("Room cannot be null");
+            throw new IllegalArgumentException("Room type cannot be null");
         }
-        System.out.println("Calculating total cost:");
-        System.out.println("Room Type: " + room.getRoomType());
-        int totalCost = room.getTotalCost();
+        int totalCost = room.getTotalCost() * durationStay;
         System.out.println("Total Cost: $" + totalCost);
         return totalCost;
     }
@@ -207,7 +133,7 @@ public class Receptionist extends User{
     }
 
 
-    //DATABASE CODE
+    //DATABASE CODE handeled by proxy [true]
     private void makeRoomOccubied(Room choosedRoom)
     {
         ProxyRoomDatabase proxyRoomDatabase = new ProxyRoomDatabase();
@@ -215,27 +141,31 @@ public class Receptionist extends User{
         System.out.println("Room : " + choosedRoom.getRoomNum() + " is occubied now" );
     }
 
-    public void assignRoomToResident(Resident resident , String roomType) {
+    //[0] i have a resident with its info (name ,phone, roomtype , durationstay)
+    //[1] check available room of matched type
+    //[2] if no matches say sorry
+    //[3] if matched take first one
+    //[4] room must be occupied now
+    //[5] then calc totalcost for him
+    //[6] add him in the system (database)
+    public void residentCheckIn(Resident resident ) {
         // step check available one
-        List<Room> availableRooms = checkAvailableRoom(roomType);
+        List<Room> availableRooms = checkAvailableRoom(resident.getRoomType());
         if (availableRooms == null) {
             return;
         }
 
         // Assign the first available room (can be modified for custom selection)
         Room availableRoom = availableRooms.get(0);
-
-        System.out.println("Assigning room " + availableRoom.getRoomNum() + " to resident " + resident.getResidentName());
-        resident.setAssignedRoom(availableRoom.getRoomNum());
-
-        // Step 3: Update the room as occupied using the proxy
         makeRoomOccubied(availableRoom);
-
-        // Step 4: Calculate and update total cost
-        int totalCost = TotalCost(availableRoom);
+        int totalCost = CalcTotalCost(availableRoom , resident.getDurationStay()) ;
         resident.setTotalCost(totalCost);
+       // resident.setRoomType(availableRoom.getRoomNum());
+//        addResident(resident.getResidentName(),resident.getResidentPhone(),resident.getDurationStay(),totalCost);
+        addResidentToDatabase(resident);
+
 
         System.out.println("Room assigned successfully!");
-        System.out.println("Updated Total Cost: $" + totalCost);
+
     }
 }

@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ProxyResidentDataFetcher implements ResidentDataFetcher {
     private RealResidentDataFetcher realFetcher;
-    private List<Resident> cachedResidents;
+    private List<Resident> ResidentsList;
     //private String name;
     public ProxyResidentDataFetcher() {
       //  this.name = residentName;
@@ -14,10 +14,25 @@ public class ProxyResidentDataFetcher implements ResidentDataFetcher {
     }
     @Override
     public List<Resident> fetchResidents() {
-        if (cachedResidents == null) {
-           // realFetcher = new RealResidentDataFetcher();
-            cachedResidents = realFetcher.fetchResidents();
-        }
-        return cachedResidents;
+        ResidentsList = realFetcher.fetchResidents();
+        return ResidentsList;
+    }
+
+    @Override
+    public void editResidentToDatabase(Resident resident , String newName ,String newPhone) {
+         if (resident == null) {
+             System.out.println("Please enter a valid resident to edit");
+             return;
+         }
+         realFetcher.editResidentToDatabase(resident , newName ,newPhone);
+    }
+
+    @Override
+    public void deleteResidentFromDatabase(String residentName) {
+       if (residentName == null) {
+           System.out.println("Please enter a valid resident to delete");
+           return;
+       }
+       realFetcher.deleteResidentFromDatabase(residentName);
     }
 }
