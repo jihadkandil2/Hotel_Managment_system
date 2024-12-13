@@ -22,7 +22,7 @@ public class Main {
         receptionist.viewResidentDetails();
 
         // Create a resident
-        Resident resident = new Resident();
+        Resident resident = new Resident("loay","0102265455651",2,"single","halfService");
 
         resident.setResidentName("loay");
         resident.setResidentPhone("0102265455651");

@@ -10,6 +10,27 @@ public class Resident {
     //link var (service type)
     //totalCost
 
+    private Room assignedRoom;  // الغرفة المعينة للمقيم
+
+    // Getter and Setter for assignedRoom
+    public Room getAssignedRoom() {
+        return assignedRoom;
+    }
+
+    public void setAssignedRoom(Room assignedRoom) {
+        this.assignedRoom = assignedRoom;
+    }
+    public Resident() {
+
+    }
+
+    public Resident(String residentName, String residentPhone, int durationStay, String ServiceType, String roomType) {
+        this.residentName = residentName;
+        this.residentPhone = residentPhone;
+        this. DurationStay = durationStay;
+        this.roomType = roomType;
+        this.ServiceType = ServiceType;
+    }
 
     public String getServiceType() {
         return ServiceType;

@@ -30,7 +30,7 @@ public class RealResidentDataFetcher implements ResidentDataFetcher{
              ResultSet resultSet = preparedStatement.executeQuery()) {
 
             while (resultSet.next()) {
-                Resident resident = new Resident();
+               Resident resident =new Resident();
                 resident.setResidentName(resultSet.getString("name"));
                 resident.setResidentPhone(resultSet.getString("phone"));
                 resident.setDurationStay(resultSet.getInt("duration_stay"));
@@ -46,18 +46,17 @@ public class RealResidentDataFetcher implements ResidentDataFetcher{
     }
 
     @Override
-    public void editResidentToDatabase(Resident resident , String newName ,String newPhone) {
+    public void editResidentToDatabase(Resident resident, String newName, String newPhone) {
         try (Connection connection = Database.getConnection()) {
-            String query = "UPDATE resident SET phone = ? , name=? WHERE name = ?";
+            String query = "UPDATE resident SET phone = ?, name = ? WHERE name = ?";  // تعديل الاسم ورقم الهاتف
             PreparedStatement statement = connection.prepareStatement(query);
 
-            statement.setString(1, newPhone);
-            statement.setString(2, newName);
-            statement.setString(3, resident.getResidentName());
-
+            statement.setString(1, newPhone);   // تعيين رقم الهاتف الجديد
+            statement.setString(2, newName);    // تعيين الاسم الجديد
+            statement.setString(3, resident.getResidentName()); // تحديد المقيم باستخدام الاسم القديم
 
             int rowsUpdated = statement.executeUpdate();
-            //Depugging
+
             if (rowsUpdated > 0) {
                 System.out.println("Resident details updated successfully in the database: " + newName);
             } else {
@@ -67,7 +66,32 @@ public class RealResidentDataFetcher implements ResidentDataFetcher{
             e.printStackTrace();
         }
     }
+@Override
+public Resident getResidentFromDatabase(String residentName) {
+    Resident resident = null;
+    String query = "SELECT name, phone, duration_stay, total_cost, assignedRoom FROM resident WHERE name = ?";
 
+    try (Connection connection = Database.getConnection();
+         PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+        preparedStatement.setString(1, residentName);
+
+        try (ResultSet resultSet = preparedStatement.executeQuery()) {
+            if (resultSet.next()) {
+                resident = new Resident();
+                resident.setResidentName(resultSet.getString("name"));
+                resident.setResidentPhone(resultSet.getString("phone"));
+                resident.setDurationStay(resultSet.getInt("duration_stay"));
+                resident.setTotalCost(resultSet.getDouble("total_cost"));
+                resident.setRoomType(resultSet.getString("assignedRoom"));
+            }
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+
+    return resident;
+}
     @Override
     public void deleteResidentFromDatabase(String residentName) {
         try (Connection connection = Database.getConnection()) {

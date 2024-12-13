@@ -110,7 +110,7 @@ public class LoginFrame extends JFrame {
                                 JOptionPane.showMessageDialog(this, "Receptionist logged in successfully!");
                                 // Navigate to receptionist dashboard (implement this page)
 
-                                new ReceptionistFrame(); // Example class for receptionist dashboard
+                                new ReceptionistGUI(); // Example class for receptionist dashboard
                                 dispose();
                             } else {
                                 JOptionPane.showMessageDialog(this, "Unknown role!");

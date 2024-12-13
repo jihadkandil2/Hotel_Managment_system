@@ -17,15 +17,26 @@ public class ProxyResidentDataFetcher implements ResidentDataFetcher {
         ResidentsList = realFetcher.fetchResidents();
         return ResidentsList;
     }
-
-    @Override
-    public void editResidentToDatabase(Resident resident , String newName ,String newPhone) {
-         if (resident == null) {
-             System.out.println("Please enter a valid resident to edit");
-             return;
-         }
-         realFetcher.editResidentToDatabase(resident , newName ,newPhone);
+@Override
+public Resident getResidentFromDatabase(String residentName){
+    if (residentName == null || residentName.isEmpty()) {
+        System.out.println("Resident name cannot be null or empty.");
+        return null;
     }
+    // استرجاع المقيم من قاعدة البيانات عبر RealResidentDataFetcher
+    return realFetcher.getResidentFromDatabase(residentName);
+}
+    @Override
+
+    public void editResidentToDatabase(Resident resident, String newName, String newPhone) {
+        if (resident == null) {
+            System.out.println("Resident not found.");
+            return;
+        }
+        // إجراء التعديل في قاعدة البيانات عبر `RealResidentDataFetcher`
+        realFetcher.editResidentToDatabase(resident, newName, newPhone);
+    }
+
 
     @Override
     public void deleteResidentFromDatabase(String residentName) {
