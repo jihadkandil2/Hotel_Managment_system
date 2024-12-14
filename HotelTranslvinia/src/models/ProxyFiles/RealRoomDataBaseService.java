@@ -43,24 +43,27 @@ public class RealRoomDataBaseService implements RoomDataBaseService {
     }
 
     @Override
-    public void editRoom(String roomNum, String roomType, int price, int isOccupied) {
-        String query = "UPDATE room SET room_type = ?, room_price = ?, is_occupied = ? WHERE room_num = ?";
+    public void editRoom(Room room) {
+        String query = "UPDATE room SET  is_occupied = ?, residentName=? WHERE room_num = ?";
 
         try (Connection connection = Database.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
 
-            stmt.setString(4, roomNum);
-            stmt.setString(1, roomType);
-            stmt.setInt(2, price);
-            stmt.setInt(3, isOccupied);
-
+            stmt.setInt(1, room.getIsOccupied());
+            if (room.getIsOccupied() == 0) {
+                stmt.setString(2, null);
+            }
+            else {
+                stmt.setString(2, room.getAssignedResident().getResidentName());
+            }
+            stmt.setString(3, room.getRoomNum());
 
             int rowsUpdated = stmt.executeUpdate();
 
             if (rowsUpdated > 0) {
-                System.out.println("Room " + roomNum + " updated successfully in the database.");
+                System.out.println("Room " +  room.getRoomNum() + " updated successfully in the database.");
             } else {
-                System.out.println("Room " + roomNum + " not found in the database.");
+                System.out.println("Room " +  room.getRoomNum() + " not found in the database.");
             }
         } catch (Exception e) {
             e.printStackTrace();

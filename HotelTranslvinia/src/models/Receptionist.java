@@ -8,6 +8,7 @@ import models.Decorator.HalfService;
 import models.ProxyFiles.ProxyResidentDataFetcher;
 import models.ProxyFiles.ProxyRoomDatabase;
 import models.ProxyFiles.ResidentDataFetcher;
+import models.ProxyFiles.RoomDataBaseService;
 
 import javax.swing.*;
 import java.sql.Connection;
@@ -25,26 +26,21 @@ public class Receptionist extends User{
 
     private int salary;
     private String phone;
-    private Resident resident;
     private Room availableRoom;
     private List<Resident> residentList;
-    private ResidentDataFetcher proxyFetcher;
+    private ResidentDataFetcher proxyResidentFetcher;
+    private RoomDataBaseService proxyRoomDatabase ;
     public Receptionist() {
         super();
         this.residentList = new ArrayList<>(); // Initialize the resident list
-        this.resident = new Resident(); // Initialize the resident object
-        this.proxyFetcher = new ProxyResidentDataFetcher();
+        this.proxyResidentFetcher = new ProxyResidentDataFetcher();
+        this.proxyRoomDatabase = new ProxyRoomDatabase();
     }
 
-    public Resident getResident() {
-        return resident;
-    }
 
-    public void setResident(Resident resident) {
-        this.resident = resident;
-    }
 
-    // Getters and Setters
+    // Getters and Setters:
+    //---------------------
     public int getSalary() {
         return salary;
     }
@@ -61,83 +57,10 @@ public class Receptionist extends User{
         this.phone = phone;
     }
 
+    //---------------------------------------------------------------------------------------------------------------------
 
-    // Database insertion logic
-    private void addResidentToDatabase(Resident resident) {
-        try (Connection connection = Database.getConnection()) {
-            String query = "INSERT INTO resident (name, phone, duration_stay ,total_cost,assignedRoom) VALUES (?, ?, ?, ?,?)";
-            PreparedStatement statement = connection.prepareStatement(query);
-
-            statement.setString(1, resident.getResidentName());
-            statement.setString(2, resident.getResidentPhone());
-            statement.setInt(3, resident.getDurationStay());
-            statement.setDouble(4, resident.getTotalCost());
-            statement.setString(5,resident.getRoomType());
-
-            statement.executeUpdate();
-            System.out.println("Resident added to the database successfully.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.err.println("Error adding resident to the database: " + e.getMessage());
-        }
-    }
-
-
-    //open connection
-    //set query string update on table with parameters [] where []
-    // execute update statment
-    public void editResident(Resident resident , String newName ,String newPhone) {
-       proxyFetcher.editResidentToDatabase(resident , newName , newPhone);
-    }
-
-
-    // Database code for deleting a resident
-    public void deleteResident(String residentName) {
-        // Step 1: Check if the resident exists in the database
-        Resident residentToDelete =proxyFetcher. getResidentFromDatabase(residentName);
-
-        // Step 2: If resident doesn't exist, display a message and exit the method
-        if (residentToDelete == null) {
-            JOptionPane.showMessageDialog(null, "Resident not found.");
-            return;
-        }
-
-        // Step 3: Get the assigned room of the resident
-        Room choosedRoom = residentToDelete.getAssignedRoom();
-
-        // Step 4: If the resident has a room, update the room status to available
-        if (choosedRoom != null) {
-            updateRoomStatusToAvailable(choosedRoom);
-        }
-
-        // Step 5: Remove the resident from the database
-        proxyFetcher.deleteResidentFromDatabase(residentName);
-
-        // Step 6: Display success message
-        System.out.println("Resident and room status deleted successfully.");
-    }
-
-
-
-
-    //use proxy to fetch resident from database in a list
-    // print the list content
-    public String viewResidentDetails() {
-        residentList = proxyFetcher.fetchResidents();
-
-        StringBuilder residentsData = new StringBuilder();
-        for (Resident resident : residentList) {
-            residentsData.append("Name: ").append(resident.getResidentName()).append("\n");
-            residentsData.append("Phone: ").append(resident.getResidentPhone()).append("\n");
-            residentsData.append("Duration of Stay: ").append(resident.getDurationStay()).append("\n");
-            residentsData.append("Total Cost: $").append(resident.getTotalCost()).append("\n");
-            residentsData.append("Room Type: ").append(resident.getRoomType()).append("\n");
-            residentsData.append("-----------------------------\n");
-        }
-
-        return residentsData.toString();
-    }
-
+    //Helper functions:
+    //-----------------
     //giving a room and duration stay we multiply cost with number of nights
     private int CalcTotalCostWithout_Service(Room room  , int durationStay ) {
         if (room == null) {
@@ -184,48 +107,162 @@ public class Receptionist extends User{
         return availableRooms;
     }
 
-
     //DATABASE CODE handeled by proxy [true]
     private void makeRoomOccubied(Room choosedRoom)
     {
-        ProxyRoomDatabase proxyRoomDatabase = new ProxyRoomDatabase();
-        proxyRoomDatabase.editRoom(choosedRoom.getRoomNum(), choosedRoom.getRoomType(), choosedRoom.getRoomPrice(), 1);
+        if(choosedRoom == null)
+        {
+            System.out.println("Please enter Room and try again..");
+            return;
+        }
+        proxyRoomDatabase.editRoom(choosedRoom);
         System.out.println("Room : " + choosedRoom.getRoomNum() + " is occubied now" );
     }
-    private void updateRoomStatusToAvailable(Room choosedRoom) {
 
-        if (choosedRoom != null) {
-            ProxyRoomDatabase proxyRoomDatabase = new ProxyRoomDatabase();
-            proxyRoomDatabase.editRoom(choosedRoom.getRoomNum(), choosedRoom.getRoomType(), 0, 0);
-            System.out.println("Room " + choosedRoom.getRoomNum() + " is now available.");
-        } else {
-            System.out.println("Room not found, cannot update status.");
+    //
+    private void makeRoomAvailable(Room room)
+    {
+        if(room == null)
+        {
+            System.out.println("Please enter Room and try again..");
+            return;
         }
+        proxyRoomDatabase.editRoom(room);
+        System.out.println("Room : " + room.getRoomNum() + " is Available now" );
     }
 
+    // Database insertion logic
+    private void addResidentToDatabase(Resident resident) {
+        if (resident == null)
+        {
+            System.out.println("resident field is empty Please send Resident to add...");
+            return ;
+        }
+        proxyResidentFetcher.addResidentToDatabase(resident);
+    }
+
+
+
+
+    //---------------------------------------------------------------------------------------------------------------------
+
+    //main functions: [edit - delete -view - checkin]
+    //-----------------------------------------------
+    //DataBase Code for edit a resident
+    public void editResident(Resident resident , String newName ,String newPhone) {
+        if (resident == null)
+        {
+            System.out.println("resident field is empty Please send Resident to edit...");
+            return ;
+        }
+        proxyResidentFetcher.editResidentToDatabase(resident , newName , newPhone);
+    }
+
+    // Database code for deleting a resident
+    public void deleteResident(String residentName) {
+        // Step 1: Check if the resident exists in the database
+        Resident residentToDelete =proxyResidentFetcher.getResidentFromDatabase(residentName);
+        //DEZEFT
+//        System.out.println("resident Name : " + residentToDelete.getResidentName() ); // true
+//        System.out.println( "resident phone: " +residentToDelete.getResidentPhone()); // true
+//        System.out.println("resident duration stay: " + residentToDelete.getDurationStay()); // true
+//        System.out.println("resident total_cost : " + residentToDelete.getTotalCost()); // true
+//        System.out.println("reisdent assigned room type : " + residentToDelete.getAssignedRoom().getRoomType());
+//        System.out.println("resident assigned room number"+ residentToDelete.getAssignedRoom().getRoomNum());
+//        System.out.println("resident assigned is : " + residentToDelete.getAssignedRoom().getAssignedResident().getResidentName());
+
+
+        // Step 2: If resident doesn't exist, display a message and exit the method
+        if (residentToDelete == null) {
+            JOptionPane.showMessageDialog(null, "Resident not found.");
+            return;
+        }
+
+        // Step 3: Get the assigned room of the resident
+        Room choosedRoom = residentToDelete.getAssignedRoom();
+        if (choosedRoom == null)
+            System.out.println("I found the problem is here");
+
+        //DEZEFT
+//        System.out.println("Room hezen num : " + choosedRoom.getRoomNum() ); // true
+//        System.out.println("Room hezen type: " + choosedRoom.getRoomType() ); // true
+//        System.out.println("Room hezen price : " + choosedRoom.getRoomPrice() ); // true
+//        System.out.println("Room hezen is occupied : " + choosedRoom.getIsOccupied()); // true
+//        System.out.println("Room resident : " + choosedRoom.getAssignedResident().getResidentName());
+
+
+
+        // Step 4: If the resident has a room, update the room status to available
+        if (choosedRoom == null) {
+            System.out.println("That resident does not have room assigned.");
+            return;
+        }
+
+        choosedRoom.setIsOccupied(0);
+        choosedRoom.setAssignedResident(null);
+        makeRoomAvailable(choosedRoom);
+        // Step 5: Remove the resident from the database
+        proxyResidentFetcher.deleteResidentFromDatabase(residentName);
+
+        // Step 6: Display success message
+        System.out.println("Resident and room status deleted successfully.");
+    }
+
+    //use proxy to fetch resident from database in a list
+    // print the list content
+    public String viewResidentDetails() {
+        residentList = proxyResidentFetcher.fetchResidents();
+        if (residentList == null) {
+            //write code for display message in gui
+            return null;
+        }
+        StringBuilder residentsData = new StringBuilder();
+        for (Resident resident : residentList) {
+            residentsData.append("Name: ").append(resident.getResidentName()).append("\n");
+            residentsData.append("Phone: ").append(resident.getResidentPhone()).append("\n");
+            residentsData.append("Duration of Stay: ").append(resident.getDurationStay()).append("\n");
+            residentsData.append("Total Cost: $").append(resident.getTotalCost()).append("\n");
+            residentsData.append("Room Type: ").append(resident.getAssignedRoom().getRoomType()).append("\n");
+            residentsData.append("Room Number: ").append(resident.getAssignedRoom().getRoomNum()).append("\n");
+            residentsData.append("-----------------------------\n");
+        }
+
+        return residentsData.toString();
+    }
+
+    //Logic Steps:-
+    //------------
     //[0] i have a resident with its info (name ,phone, roomtype , durationstay)
     //[1] check available room of matched type
     //[2] if no matches say sorry
     //[3] if matched take first one
     //[4] room must be occupied now
+    //[5] make it assigned into that resident
     //[5] check if (!service) =>  calcTotalCostWithoutDecoration
     //[6] if (service) =>  calcCostWithDecorated
     //[7] add him in the system (database)
-
     public void residentCheckIn(Resident resident) {
         // Step 1: Check for available rooms of the requested type
-        List<Room> availableRooms = checkAvailableRoom(resident.getRoomType());
+        List<Room> availableRooms = checkAvailableRoom(resident.getAssignedRoom().getRoomType());
 
         // Step 2: If no rooms are available, display a message and exit the method
         if (availableRooms == null || availableRooms.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "No available rooms of type " + resident.getRoomType() + ".");
+            JOptionPane.showMessageDialog(null, "No available rooms of type " + resident.getAssignedRoom().getRoomType() + ".");
             return;
         }
 
         // Step 3: Assign the first available room (this can be modified for custom selection)
-        availableRoom = availableRooms.get(0);
-        makeRoomOccubied(availableRoom);
+        availableRoom = availableRooms.getFirst();
+        availableRoom.setIsOccupied(1);
+        availableRoom.setAssignedResident(resident);
 
+        System.out.println(availableRoom.getAssignedResident().getResidentName());
+        //DEPUG---------------
+        System.out.println("Room : " + availableRoom.getRoomNum() + " is occupied now" );
+       // System.out.println("Room Resident: " + availableRoom.getAssignedResident() );
+
+        resident.setAssignedRoom(availableRoom);
+        makeRoomOccubied(availableRoom);
         // Step 4: Calculate the total cost based on the service type
         int totalCost = 0;
         if (resident.getServiceType() == null) {
@@ -236,8 +273,17 @@ public class Receptionist extends User{
 
         // Step 5: Set the total cost for the resident and add them to the database
         resident.setTotalCost(totalCost);
+        //DEPUG:---------------------------------------------------------------------------
+        System.out.println("Resident name = " + resident.getResidentName());
+        System.out.println("Resident phone number = " + resident.getResidentPhone());
+        System.out.println("Resident duration = " + resident.getDurationStay());
+        System.out.println("Total cost = " + totalCost);
+        System.out.println("Room type = " + resident.getAssignedRoom().getRoomType());
+        System.out.println("Room number = " + resident.getAssignedRoom().getRoomNum());
+        //----------------------------------------------------------------------------------above delete
         addResidentToDatabase(resident);
         System.out.println("Room assigned successfully!");
     }
 
+    //-----------------------------------------------------------------------------------------------------------------
 }

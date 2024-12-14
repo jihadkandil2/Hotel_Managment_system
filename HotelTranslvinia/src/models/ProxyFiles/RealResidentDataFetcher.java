@@ -1,6 +1,7 @@
 package models.ProxyFiles;
 
 import main.Database; // Import your Database class
+import models.Factory.RoomFactory;
 import models.Receptionist;
 import models.Resident;
 import models.Room;
@@ -16,14 +17,17 @@ public class RealResidentDataFetcher implements ResidentDataFetcher{
     private Receptionist receptionist;
     private Room room;
     List<Resident> residents;
+    Resident resident = null;
+
     public RealResidentDataFetcher() {
-       // this.residentName = residentName;
     }
+
+
     @Override
     public List<Resident> fetchResidents() {
         residents= new ArrayList<>();
 
-        String query = "SELECT name, phone, duration_stay, total_cost ,assignedRoom FROM resident"; // Fetch all residents
+        String query = "SELECT name, phone, duration_stay, total_cost ,assignedRoomType ,assignedRoomnumber FROM resident"; // Fetch all residents
 
         try (Connection connection = Database.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -31,12 +35,16 @@ public class RealResidentDataFetcher implements ResidentDataFetcher{
 
             while (resultSet.next()) {
                Resident resident =new Resident();
+               Room room  ;
                 resident.setResidentName(resultSet.getString("name"));
                 resident.setResidentPhone(resultSet.getString("phone"));
                 resident.setDurationStay(resultSet.getInt("duration_stay"));
                 resident.setTotalCost(resultSet.getDouble("total_cost"));
-                resident.setRoomType(resultSet.getString("assignedRoom"));
+                room =RoomFactory.CreateRoomType(resultSet.getString("assignedRoomType"));
+                room.setRoomNum(resultSet.getString("assignedRoomnumber"));
+                resident.setAssignedRoom(room);
                 residents.add(resident);
+
             }
         } catch (Exception e) {
             System.err.println("Error fetching resident data: " + e.getMessage());
@@ -48,12 +56,12 @@ public class RealResidentDataFetcher implements ResidentDataFetcher{
     @Override
     public void editResidentToDatabase(Resident resident, String newName, String newPhone) {
         try (Connection connection = Database.getConnection()) {
-            String query = "UPDATE resident SET phone = ?, name = ? WHERE name = ?";  // تعديل الاسم ورقم الهاتف
+            String query = "UPDATE resident SET phone = ?, name = ? WHERE name = ?";
             PreparedStatement statement = connection.prepareStatement(query);
 
-            statement.setString(1, newPhone);   // تعيين رقم الهاتف الجديد
-            statement.setString(2, newName);    // تعيين الاسم الجديد
-            statement.setString(3, resident.getResidentName()); // تحديد المقيم باستخدام الاسم القديم
+            statement.setString(1, newPhone);
+            statement.setString(2, newName);
+            statement.setString(3, resident.getResidentName());
 
             int rowsUpdated = statement.executeUpdate();
 
@@ -66,32 +74,37 @@ public class RealResidentDataFetcher implements ResidentDataFetcher{
             e.printStackTrace();
         }
     }
-@Override
-public Resident getResidentFromDatabase(String residentName) {
-    Resident resident = null;
-    String query = "SELECT name, phone, duration_stay, total_cost, assignedRoom FROM resident WHERE name = ?";
+
+    @Override
+    public Resident getResidentFromDatabase(String residentName) {
+    String query = "SELECT name, phone, duration_stay, total_cost, assignedRoomType , assignedRoomnumber FROM resident WHERE name = ?";
 
     try (Connection connection = Database.getConnection();
-         PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-
+         PreparedStatement preparedStatement = connection.prepareStatement(query))
+    {
         preparedStatement.setString(1, residentName);
 
         try (ResultSet resultSet = preparedStatement.executeQuery()) {
             if (resultSet.next()) {
                 resident = new Resident();
+                Room room;
                 resident.setResidentName(resultSet.getString("name"));
                 resident.setResidentPhone(resultSet.getString("phone"));
                 resident.setDurationStay(resultSet.getInt("duration_stay"));
                 resident.setTotalCost(resultSet.getDouble("total_cost"));
-                resident.setRoomType(resultSet.getString("assignedRoom"));
+                room =RoomFactory.CreateRoomType(resultSet.getString("assignedRoomType"));
+                room.setRoomNum(resultSet.getString("assignedRoomnumber"));
+                room.setIsOccupied(1);
+                room.setAssignedResident(resident);
+                resident.setAssignedRoom(room);
             }
         }
     } catch (SQLException e) {
         e.printStackTrace();
     }
-
     return resident;
 }
+
     @Override
     public void deleteResidentFromDatabase(String residentName) {
         try (Connection connection = Database.getConnection()) {
@@ -109,6 +122,27 @@ public Resident getResidentFromDatabase(String residentName) {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void addResidentToDatabase(Resident resident) {
+        try (Connection connection = Database.getConnection()) {
+            String query = "INSERT INTO resident (name, phone, duration_stay ,total_cost,assignedRoomType, assignedRoomnumber) VALUES (?, ?, ?, ?,?,?)";
+            PreparedStatement statement = connection.prepareStatement(query);
+
+            statement.setString(1, resident.getResidentName());
+            statement.setString(2, resident.getResidentPhone());
+            statement.setInt(3, resident.getDurationStay());
+            statement.setDouble(4, resident.getTotalCost());
+            statement.setString(5,resident.getAssignedRoom().getRoomType());
+            statement.setString(6,resident.getAssignedRoom().getRoomNum());
+
+            statement.executeUpdate();
+            System.out.println("Resident added to the database successfully.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error adding resident to the database: " + e.getMessage());
         }
     }
 }

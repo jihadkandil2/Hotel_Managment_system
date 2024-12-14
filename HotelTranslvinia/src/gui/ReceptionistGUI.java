@@ -1,8 +1,10 @@
 package gui;
 
+import models.Factory.RoomFactory;
 import models.ProxyFiles.ProxyResidentDataFetcher;
 import models.Receptionist;
 import models.Resident;
+import models.Room;
 
 import javax.swing.*;
 import java.awt.*;
@@ -133,7 +135,14 @@ public class ReceptionistGUI {
 
         try {
             int duration = Integer.parseInt(durationText);
-            Resident resident = new Resident(name, phone, duration, service, roomType);
+            Room room ;
+            room = RoomFactory.CreateRoomType(roomType);
+
+            Resident resident = new Resident(name, phone, duration);
+            room.setRoomType(roomType);
+            resident.setServiceType(service);
+            resident.setAssignedRoom(room);
+
             receptionist.residentCheckIn(resident);  // إرسال المقيم لتسجيل الدخول
 
             // التحقق مما إذا تم إضافة المقيم بنجاح
@@ -190,7 +199,7 @@ public class ReceptionistGUI {
             JOptionPane.showMessageDialog(frame, "Please enter the resident's name to delete.");
             return;
         }
-
+       // Edit here [if name doesnot exist do not display the message box of resident deleted]
         receptionist.deleteResident(name);  // تمرير 'frame' هنا
         JOptionPane.showMessageDialog(frame, "Resident deleted.");
     }

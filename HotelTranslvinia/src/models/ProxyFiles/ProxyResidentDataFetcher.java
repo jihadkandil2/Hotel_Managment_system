@@ -8,6 +8,8 @@ public class ProxyResidentDataFetcher implements ResidentDataFetcher {
     private RealResidentDataFetcher realFetcher;
     private List<Resident> ResidentsList;
     //private String name;
+
+
     public ProxyResidentDataFetcher() {
       //  this.name = residentName;
         this.realFetcher = new RealResidentDataFetcher();
@@ -45,5 +47,13 @@ public Resident getResidentFromDatabase(String residentName){
            return;
        }
        realFetcher.deleteResidentFromDatabase(residentName);
+    }
+
+    @Override
+    public void addResidentToDatabase(Resident resident) {
+        if (resident == null) {
+            System.out.println("Resident not found.");
+        }
+        realFetcher.addResidentToDatabase(resident);
     }
 }

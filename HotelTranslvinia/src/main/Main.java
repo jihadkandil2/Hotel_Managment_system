@@ -22,17 +22,16 @@ public class Main {
         receptionist.viewResidentDetails();
 
         // Create a resident
-        Resident resident = new Resident("loay","0102265455651",2,"single","halfService");
+      //  Resident resident = new Resident("loay","0102265455651",2,"single","halfService");
 
-        resident.setResidentName("loay");
-        resident.setResidentPhone("0102265455651");
-        resident.setDurationStay(2);
-        resident.setRoomType("single"); //100
-        resident.setServiceType("halfService"); // 3*100 =300
-
+     //   resident.setResidentName("loay");
+//        resident.setDurationStay(2);
+        //resident.setRoomType("single"); //100
+  //      resident.setServiceType("halfService"); // 3*100 =300
 
 
-        receptionist.residentCheckIn(resident);
+
+   //     receptionist.residentCheckIn(resident);
         receptionist.viewResidentDetails();
        // totalCost 2400 omar
 

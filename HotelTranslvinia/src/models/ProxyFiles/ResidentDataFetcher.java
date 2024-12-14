@@ -7,4 +7,6 @@ public interface ResidentDataFetcher {
     public void editResidentToDatabase(Resident resident,  String newName ,String newPhone);
     public void deleteResidentFromDatabase(String residentName);
     public Resident getResidentFromDatabase(String residentName);
+    public void addResidentToDatabase(Resident resident);
+
 }

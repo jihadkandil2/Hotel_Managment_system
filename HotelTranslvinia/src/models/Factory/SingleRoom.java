@@ -6,7 +6,6 @@ public class SingleRoom extends Room {
     public SingleRoom() {
         setRoomType("Single");
         setRoomPrice(100);
-        setIsOccupied(0);
     }
 
     @Override

@@ -19,12 +19,11 @@ public class ProxyRoomDatabase implements RoomDataBaseService {
     }
 
     @Override
-    public void editRoom(String roomNum, String roomType, int price, int isOccupied) {
+    public void editRoom(Room room) {
         if (realRoomDatabaseService == null) {
             realRoomDatabaseService = new RealRoomDataBaseService();
         }
-        System.out.println("Editing room: " + roomNum + ", Occupied status: " + isOccupied);
-        realRoomDatabaseService.editRoom(roomNum, roomType, price, isOccupied);
+        realRoomDatabaseService.editRoom(room);
 
         // Invalidate cache to ensure consistency
         cachedRooms = null;

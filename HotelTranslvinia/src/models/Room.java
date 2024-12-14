@@ -5,8 +5,19 @@ public abstract class Room {
     private String roomType;
     private int roomPrice;
     private int isOccupied;
+    private Resident assignedResident;
+
     public Room() {}
     public abstract int checkAvilability();
+
+
+    public Resident getAssignedResident() {
+        return assignedResident;
+    }
+
+    public void setAssignedResident(Resident assignedResident) {
+        this.assignedResident = assignedResident;
+    }
 
     public String getRoomNum() {
         return roomNum;
@@ -21,6 +32,7 @@ public abstract class Room {
     }
 
     public void setRoomType(String roomType) {
+
         this.roomType = roomType;
     }
 
