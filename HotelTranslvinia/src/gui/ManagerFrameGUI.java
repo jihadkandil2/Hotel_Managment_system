@@ -6,18 +6,18 @@ import models.Room;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.sql.Date;
 import java.util.List;
 
 public class ManagerFrameGUI extends JFrame {
 
-    private  Manager manager;
+    private Manager manager;
 
     public ManagerFrameGUI(Manager manager) {
         this.manager = manager;
-        setTitle("Hotel Manager Admon Page");
+        setTitle("Hotel Manager Admin Page");
         setSize(1000, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -35,7 +35,6 @@ public class ManagerFrameGUI extends JFrame {
     private JPanel createReceptionistPanel() {
         JPanel panel = new JPanel(new BorderLayout());
 
-        // Top Section: Input Fields
         JPanel inputPanel = new JPanel(new GridLayout(7, 2));
         inputPanel.add(new JLabel("Name:"));
         JTextField nameField = new JTextField();
@@ -67,20 +66,17 @@ public class ManagerFrameGUI extends JFrame {
         JButton viewButton = new JButton("View All Receptionists");
         inputPanel.add(viewButton);
 
-        // Center Section: Table
         JTable receptionistTable = new JTable();
         JScrollPane scrollPane = new JScrollPane(receptionistTable);
         panel.add(scrollPane, BorderLayout.CENTER);
-
         panel.add(inputPanel, BorderLayout.NORTH);
 
-        // Button Actions
         addButton.addActionListener(e -> {
             String name = nameField.getText();
             String phone = phoneField.getText();
             int salary = Integer.parseInt(salaryField.getText());
             String email = emailField.getText();
-            String role = (String) roleDropdown.getSelectedItem(); // Get selected role
+            String role = (String) roleDropdown.getSelectedItem();
             String password = passwordField.getText();
 
             if (role == null || role.isEmpty()) {
@@ -98,22 +94,34 @@ public class ManagerFrameGUI extends JFrame {
 
             manager.addReceptionist(receptionist);
             JOptionPane.showMessageDialog(this, "Receptionist added successfully!");
+
+            viewButton.doClick(); // Refresh the table
         });
 
         viewButton.addActionListener(e -> {
             List<Receptionist> receptionists = manager.viewAllReciptionist();
-            DefaultTableModel model = new DefaultTableModel(new String[]{"Name", "Phone", "Salary", "Email", "Role"}, 0);
+            DefaultTableModel model = new DefaultTableModel(new String[]{"Name", "Phone", "Salary", "Email", "Role", "Edit", "Delete"}, 0);
+            receptionistTable.setModel(model);
 
             for (Receptionist receptionist : receptionists) {
-                model.addRow(new Object[]{
+                Object[] row = new Object[]{
                         receptionist.getUserName(),
                         receptionist.getPhone(),
                         receptionist.getSalary(),
                         receptionist.getEmail(),
-                        receptionist.getRole()
-                });
+                        receptionist.getRole(),
+                        "Edit", // Button for editing
+                        "Delete" // Button for deleting
+                };
+
+                model.addRow(row);
             }
-            receptionistTable.setModel(model);
+
+            // Set the buttons for Edit and Delete columns
+            receptionistTable.getColumn("Edit").setCellRenderer(new ButtonRenderer("Edit"));
+            receptionistTable.getColumn("Edit").setCellEditor(new ButtonEditor(new JCheckBox(), receptionistTable, "edit", viewButton));
+            receptionistTable.getColumn("Delete").setCellRenderer(new ButtonRenderer("Delete"));
+            receptionistTable.getColumn("Delete").setCellEditor(new ButtonEditor(new JCheckBox(), receptionistTable, "delete", viewButton));
         });
 
         return panel;
@@ -143,21 +151,23 @@ public class ManagerFrameGUI extends JFrame {
     }
 
     private JPanel createIncomePanel() {
-        JPanel panel = new JPanel(new GridLayout(3, 2));
+        JPanel panel = new JPanel(new BorderLayout());
+        JPanel formPanel = new JPanel(new GridLayout(3, 2));
 
-        panel.add(new JLabel("Select Range:"));
+        formPanel.add(new JLabel("Select Range:"));
         JComboBox<String> rangeBox = new JComboBox<>(new String[]{"Weekly", "Monthly", "Annual"});
-        panel.add(rangeBox);
+        formPanel.add(rangeBox);
 
-        panel.add(new JLabel("Start Date (YYYY-MM-DD):"));
+        formPanel.add(new JLabel("Start Date (YYYY-MM-DD):"));
         JTextField startDateField = new JTextField();
-        panel.add(startDateField);
+        formPanel.add(startDateField);
 
         JButton calculateButton = new JButton("Calculate Income");
-        panel.add(calculateButton);
+        formPanel.add(calculateButton);
 
-        JLabel incomeLabel = new JLabel("Total Income: $0.0");
-        panel.add(incomeLabel);
+        JLabel incomeLabel = new JLabel("Total Income: $0.0", SwingConstants.CENTER);
+        panel.add(formPanel, BorderLayout.NORTH);
+        panel.add(incomeLabel, BorderLayout.CENTER);
 
         calculateButton.addActionListener(e -> {
             String range = (String) rangeBox.getSelectedItem();
@@ -170,8 +180,81 @@ public class ManagerFrameGUI extends JFrame {
         return panel;
     }
 
+    // This will be used for rendering the buttons in the table cell
+    public class ButtonRenderer extends JButton implements TableCellRenderer {
+        private String label;
+
+        public ButtonRenderer(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            setText(label);
+            return this;
+        }
+    }
+
+    // This will handle the button actions (Edit and Delete) inside the table
+    public class ButtonEditor extends DefaultCellEditor {
+        private JTable table;
+        private JButton button;
+        private String label;
+        private String action;
+        private JButton viewButton;
+
+        public ButtonEditor(JCheckBox checkBox, JTable table, String action, JButton viewButton) {
+            super(checkBox);
+            this.table = table;
+            this.action = action;
+            this.viewButton = viewButton;
+            button = new JButton();
+            button.setOpaque(true);
+            button.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                label = table.getValueAt(row, 0).toString(); // Get the value in the first column (name)
+
+                if (action.equals("edit")) {
+                    // Edit button action
+                    String newPhone = JOptionPane.showInputDialog("Enter new phone:", table.getValueAt(row, 1).toString());
+                    int newSalary = Integer.parseInt(JOptionPane.showInputDialog("Enter new salary:", table.getValueAt(row, 2).toString()));
+                    String newPassword = JOptionPane.showInputDialog("Enter new password:", table.getValueAt(row, 4).toString());
+
+                    Receptionist receptionist = new Receptionist();
+                    receptionist.setUserName(label);
+                    receptionist.setPhone(newPhone);
+                    receptionist.setSalary(newSalary);
+                    receptionist.setPassword(newPassword);
+
+                    manager.editReceptionist(receptionist);
+
+                    // Refresh the table
+                    viewButton.doClick();
+                } else if (action.equals("delete")) {
+                    // Delete button action
+                    int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete?", "Confirm", JOptionPane.YES_NO_OPTION);
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        manager.deleteReceptionist(label);
+
+                        // Refresh the table by reloading the data
+                        viewButton.doClick();
+                    }
+                }
+            });
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            return button;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return label;
+        }
+    }
+
     public static void main(String[] args) {
-        // Get the singleton instance of Manager
         Manager manager = Manager.getInstance();
         new ManagerFrameGUI(manager);
     }
