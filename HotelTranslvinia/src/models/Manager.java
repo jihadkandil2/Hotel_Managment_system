@@ -1,15 +1,10 @@
 package models;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
-import main.Database;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import models.ProxyFiles.ProxyReciptionistDataFetcher;
-import models.ProxyFiles.ProxyRoomDatabase;
-import models.ProxyFiles.ReceptionistDataFetcher;
-import models.ProxyFiles.RoomDataBaseService;
+
+import models.ProxyFiles.*;
 
 
 public class Manager extends User {
@@ -19,6 +14,7 @@ public class Manager extends User {
     private ReceptionistDataFetcher Proxyfetcher ;
     private RoomDataBaseService roomFetcher;
     private List<Room> roomList;
+    private IncomeDataFetcher incomeFetcher;
 
 
     private Manager() {
@@ -78,7 +74,30 @@ public class Manager extends User {
     //[1] click on show details
     //[2] calls viewReceptionistDetails (manager file) => calls FetchReceptionist (proxy file ) then from (realProxy)
     //[3] it will get all receptionist from data base and show it in a list
-    public List<Receptionist> viewReceptionistDetails(String receptionistName) {
+    //[4] i will filter to this specific name
+    public Receptionist viewReceptionistDetails(String receptionistName) {
+        workers = viewAllReciptionist(); // Fetch all receptionists
+
+        if (receptionistName != null && !receptionistName.isEmpty()) {
+            // Loop through the list to find the specific receptionist
+            for (Receptionist worker : workers) {
+                if (worker.getUserName().equalsIgnoreCase(receptionistName)) {
+                    System.out.println("Details for Receptionist: " + receptionistName);
+                    return worker;
+                }
+            }
+
+            // If no receptionist is found, print a message
+            System.out.println("Receptionist with name '" + receptionistName + "' not found.");
+        }
+        return null;
+    }
+    //Logic steps:-
+    //------------
+    //[1] calls viewReceptionistDetails (manager file) => calls FetchReceptionist (proxy file ) then from (realProxy)
+    //[2] it will get all receptionist from data base and show it in a list
+    //[3] i will filter to this specific name
+    public List<Receptionist> viewAllReciptionist() {
         Proxyfetcher = new ProxyReciptionistDataFetcher();
         workers= new ArrayList<>();
         workers =Proxyfetcher.fetchReceptionists();
@@ -98,4 +117,17 @@ public class Manager extends User {
         return roomList;
     }
 
+    //Logic steps:-
+    //-------------
+    //[1] the manager in gui will provide if he want one from 3 drop down list ( weekly, monthly, or annual) income and that will be sended as range
+    //[2] the manager specifies a specific date
+    //[3] then this calls => fetchIncome in the proxy file
+    //[4] proxy will calls => fetch income of RealIncomeFetcher
+    //[5] Based on the selection (Weekly, Monthly, Annual), query is modified to retrive from the database to calculate the total income for the specified period.
+    public double trackHotelIncome(String range, Date startDate) {
+        if (incomeFetcher == null) {
+            incomeFetcher = new ProxyIncomeDataFetcher();
+        }
+        return incomeFetcher.fetchIncome(range , startDate);
+    }
 }

@@ -1,115 +1,178 @@
 package gui;
+
 import models.Manager;
-import models.ProxyFiles.ProxyReciptionistDataFetcher;
 import models.Receptionist;
+import models.Room;
+
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.sql.Date;
 import java.util.List;
 
 public class ManagerFrame extends JFrame {
 
-    private final Manager manager;
-    private ProxyReciptionistDataFetcher proxyObjReciptionistFetcher ;
+    private  Manager manager;
+
     public ManagerFrame(Manager manager) {
         this.manager = manager;
-        proxyObjReciptionistFetcher = new ProxyReciptionistDataFetcher();
-
-
-        setTitle("Manager Dashboard");
-        setSize(800, 600); // Adjusted size for better layout
+        setTitle("Hotel Manager Admon Page");
+        setSize(1000, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        add(mainPanel);
+        JTabbedPane tabbedPane = new JTabbedPane();
 
-        // Header label
-        JLabel welcomeLabel = new JLabel("Admon Page...", JLabel.CENTER);
-        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        mainPanel.add(welcomeLabel, BorderLayout.NORTH);
+        tabbedPane.addTab("Receptionist Management", createReceptionistPanel());
+        tabbedPane.addTab("Room Management", createRoomPanel());
+        tabbedPane.addTab("Income Tracking", createIncomePanel());
 
-        // Scrollable panel for listing receptionists
-        JPanel listPanel = new JPanel();
-        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS)); // Vertically stack components
-
-        // Fetch receptionist data
-        List<Receptionist> receptionistsList = proxyObjReciptionistFetcher.fetchReceptionists() ;
-
-        for (Receptionist receptionist : receptionistsList) {
-            JPanel itemPanel = createReceptionistPanel(receptionist);
-            listPanel.add(itemPanel);
-        }
-
-        JScrollPane scrollPane = new JScrollPane(listPanel);
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
-
-        // Log Out button
-        JButton logoutButton = new JButton("Log Out");
-        logoutButton.setFont(new Font("Arial", Font.PLAIN, 16));
-        logoutButton.addActionListener(e -> {
-            dispose();
-            new HomePage(); // Re-open the home page
-        });
-        mainPanel.add(logoutButton, BorderLayout.SOUTH);
-
-        setLocationRelativeTo(null); // Center the window
-        setVisible(true); // Make the ManagerFrame visible
+        add(tabbedPane);
+        setVisible(true);
     }
 
-    private JPanel createReceptionistPanel(Receptionist receptionist) {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-        panel.setMaximumSize(new Dimension(750, 50)); // Limit the width of each item panel
+    private JPanel createReceptionistPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
 
-        JLabel nameLabel = new JLabel(receptionist.getUserName());
-        nameLabel.setFont(new Font("Arial", Font.PLAIN, 16));
-        panel.add(nameLabel);
+        // Top Section: Input Fields
+        JPanel inputPanel = new JPanel(new GridLayout(7, 2));
+        inputPanel.add(new JLabel("Name:"));
+        JTextField nameField = new JTextField();
+        inputPanel.add(nameField);
 
-        JButton viewButton = createButton("View Profile", e -> viewProfile(receptionist));
-        //JButton editButton = createButton("Edit", e -> editReceptionist(receptionist));
-        JButton deleteButton = createButton("Delete", e -> deleteReceptionist(receptionist));
+        inputPanel.add(new JLabel("Phone:"));
+        JTextField phoneField = new JTextField();
+        inputPanel.add(phoneField);
 
-        panel.add(viewButton);
-      //  panel.add(editButton);
-        panel.add(deleteButton);
+        inputPanel.add(new JLabel("Salary:"));
+        JTextField salaryField = new JTextField();
+        inputPanel.add(salaryField);
+
+        inputPanel.add(new JLabel("Email:"));
+        JTextField emailField = new JTextField();
+        inputPanel.add(emailField);
+
+        inputPanel.add(new JLabel("Role:"));
+        JComboBox<String> roleDropdown = new JComboBox<>(new String[]{"", "receptionist", "admin"});
+        inputPanel.add(roleDropdown);
+
+        inputPanel.add(new JLabel("Password:"));
+        JTextField passwordField = new JTextField();
+        inputPanel.add(passwordField);
+
+        JButton addButton = new JButton("Add Receptionist");
+        inputPanel.add(addButton);
+
+        JButton viewButton = new JButton("View All Receptionists");
+        inputPanel.add(viewButton);
+
+        // Center Section: Table
+        JTable receptionistTable = new JTable();
+        JScrollPane scrollPane = new JScrollPane(receptionistTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        panel.add(inputPanel, BorderLayout.NORTH);
+
+        // Button Actions
+        addButton.addActionListener(e -> {
+            String name = nameField.getText();
+            String phone = phoneField.getText();
+            int salary = Integer.parseInt(salaryField.getText());
+            String email = emailField.getText();
+            String role = (String) roleDropdown.getSelectedItem(); // Get selected role
+            String password = passwordField.getText();
+
+            if (role == null || role.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please select a valid role.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            Receptionist receptionist = new Receptionist();
+            receptionist.setUserName(name);
+            receptionist.setPhone(phone);
+            receptionist.setSalary(salary);
+            receptionist.setEmail(email);
+            receptionist.setRole(role);
+            receptionist.setPassword(password);
+
+            manager.addReceptionist(receptionist);
+            JOptionPane.showMessageDialog(this, "Receptionist added successfully!");
+        });
+
+        viewButton.addActionListener(e -> {
+            List<Receptionist> receptionists = manager.viewAllReciptionist();
+            DefaultTableModel model = new DefaultTableModel(new String[]{"Name", "Phone", "Salary", "Email", "Role"}, 0);
+
+            for (Receptionist receptionist : receptionists) {
+                model.addRow(new Object[]{
+                        receptionist.getUserName(),
+                        receptionist.getPhone(),
+                        receptionist.getSalary(),
+                        receptionist.getEmail(),
+                        receptionist.getRole()
+                });
+            }
+            receptionistTable.setModel(model);
+        });
 
         return panel;
     }
 
-    private JButton createButton(String text, java.awt.event.ActionListener action) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.PLAIN, 14));
-        button.addActionListener(action);
-        return button;
+    private JPanel createRoomPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        JButton fetchRoomsButton = new JButton("Fetch Hotel Rooms");
+        panel.add(fetchRoomsButton, BorderLayout.NORTH);
+
+        JTable roomTable = new JTable();
+        JScrollPane scrollPane = new JScrollPane(roomTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        fetchRoomsButton.addActionListener(e -> {
+            List<Room> rooms = manager.fetchHotelsRooms();
+            DefaultTableModel model = new DefaultTableModel(new String[]{"Room Number", "Type", "Price", "Occupied"}, 0);
+
+            for (Room room : rooms) {
+                model.addRow(new Object[]{room.getRoomNum(), room.getRoomType(), room.getRoomPrice(), room.getIsOccupied()});
+            }
+            roomTable.setModel(model);
+        });
+
+        return panel;
     }
 
-    private void viewProfile(Receptionist receptionist) {
-        manager.viewReceptionistDetails(receptionist.getUserName());
-        JOptionPane.showMessageDialog(this, "Name: " + receptionist.getUserName() +
-                "\nJob Title: " + receptionist.getRole() +
-                "\nSalary: " + receptionist.getSalary(), "Receptionist Profile", JOptionPane.INFORMATION_MESSAGE);
+    private JPanel createIncomePanel() {
+        JPanel panel = new JPanel(new GridLayout(3, 2));
+
+        panel.add(new JLabel("Select Range:"));
+        JComboBox<String> rangeBox = new JComboBox<>(new String[]{"Weekly", "Monthly", "Annual"});
+        panel.add(rangeBox);
+
+        panel.add(new JLabel("Start Date (YYYY-MM-DD):"));
+        JTextField startDateField = new JTextField();
+        panel.add(startDateField);
+
+        JButton calculateButton = new JButton("Calculate Income");
+        panel.add(calculateButton);
+
+        JLabel incomeLabel = new JLabel("Total Income: $0.0");
+        panel.add(incomeLabel);
+
+        calculateButton.addActionListener(e -> {
+            String range = (String) rangeBox.getSelectedItem();
+            Date startDate = Date.valueOf(startDateField.getText());
+            double income = manager.trackHotelIncome(range, startDate);
+
+            incomeLabel.setText("Total Income: $" + income);
+        });
+
+        return panel;
     }
 
-//    private void editReceptionist(Receptionist receptionist) {
-//        String newJobTitle = JOptionPane.showInputDialog(this, "Enter new job title:", receptionist.getRole());
-//        String newSalaryStr = JOptionPane.showInputDialog(this, "Enter new salary:", receptionist.getSalary());
-//        if (newJobTitle != null && newSalaryStr != null) {
-//            try {
-//                int newSalary = Integer.parseInt(newSalaryStr);
-//                manager.editReceptionist(receptionist.getUserName(), newJobTitle, newSalary);
-//                JOptionPane.showMessageDialog(this, "Receptionist updated successfully!");
-//            } catch (NumberFormatException e) {
-//                JOptionPane.showMessageDialog(this, "Invalid salary value!", "Error", JOptionPane.ERROR_MESSAGE);
-//            }
-//        }
-//    }
-
-    private void deleteReceptionist(Receptionist receptionist) {
-        int confirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete " + receptionist.getUserName() + "?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
-        if (confirmation == JOptionPane.YES_OPTION) {
-            manager.deleteReceptionist(receptionist.getUserName());
-            JOptionPane.showMessageDialog(this, "Receptionist deleted successfully!");
-            dispose();
-            new ManagerFrame(manager); // Refresh the frame
-        }
+    public static void main(String[] args) {
+        // Get the singleton instance of Manager
+        Manager manager = Manager.getInstance();
+        new ManagerFrame(manager);
     }
 }

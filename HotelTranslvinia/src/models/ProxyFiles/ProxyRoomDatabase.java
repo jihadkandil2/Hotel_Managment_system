@@ -6,16 +6,14 @@ import java.util.List;
 
 public class ProxyRoomDatabase implements RoomDataBaseService {
     private RealRoomDataBaseService realRoomDatabaseService;
-    private List<Room> cachedRooms;
+    private List<Room> Rooms;
 
     @Override
     public List<Room> fetchAllRooms() {
-        if (cachedRooms == null) {
-            System.out.println("Fetching rooms from real database...");
-            realRoomDatabaseService = new RealRoomDataBaseService();
-            cachedRooms = realRoomDatabaseService.fetchAllRooms();
-        }
-        return cachedRooms;
+
+        realRoomDatabaseService = new RealRoomDataBaseService();
+        Rooms = realRoomDatabaseService.fetchAllRooms();
+        return Rooms;
     }
 
     @Override
@@ -26,7 +24,7 @@ public class ProxyRoomDatabase implements RoomDataBaseService {
         realRoomDatabaseService.editRoom(room);
 
         // Invalidate cache to ensure consistency
-        cachedRooms = null;
+        Rooms = null;
         System.out.println("Cache invalidated, room status updated.");
     }
 }
