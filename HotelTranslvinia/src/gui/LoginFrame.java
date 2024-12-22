@@ -104,7 +104,7 @@ public class LoginFrame extends JFrame {
                             if ("admin".equals(role)) {
                                 JOptionPane.showMessageDialog(this, "Admin logged in successfully!");
                                 Manager manager = Manager.getInstance(); // Create Manager instance
-                                new ManagerFrame(manager); // Pass the Manager instance to ManagerFrame
+                                new ManagerFrameGUI(manager); // Pass the Manager instance to ManagerFrame
                                 dispose();
                             } else if ("receptionist".equals(role)) {
                                 JOptionPane.showMessageDialog(this, "Receptionist logged in successfully!");

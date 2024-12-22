@@ -11,11 +11,11 @@ import java.awt.event.ActionEvent;
 import java.sql.Date;
 import java.util.List;
 
-public class ManagerFrame extends JFrame {
+public class ManagerFrameGUI extends JFrame {
 
     private  Manager manager;
 
-    public ManagerFrame(Manager manager) {
+    public ManagerFrameGUI(Manager manager) {
         this.manager = manager;
         setTitle("Hotel Manager Admon Page");
         setSize(1000, 800);
@@ -173,6 +173,6 @@ public class ManagerFrame extends JFrame {
     public static void main(String[] args) {
         // Get the singleton instance of Manager
         Manager manager = Manager.getInstance();
-        new ManagerFrame(manager);
+        new ManagerFrameGUI(manager);
     }
 }

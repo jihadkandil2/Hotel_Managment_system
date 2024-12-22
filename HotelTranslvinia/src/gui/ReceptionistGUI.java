@@ -49,7 +49,7 @@ public class ReceptionistGUI {
         inputPanel.add(durationField);
 
         inputPanel.add(new JLabel("Service Type (Full/Half/Bed & Breakfast):"));
-        serviceField = new JTextField();
+        serviceField = new JTextField(); // يمكن تركه فارغًا
         inputPanel.add(serviceField);
 
         // إضافة حقل جديد لنوع الغرفة
@@ -111,15 +111,40 @@ public class ReceptionistGUI {
     }
 
     private void handleCheckIn() {
+        displayArea.setText(""); // تفريغ منطقة العرض قبل تنفيذ العملية
+
         String name = nameField.getText();
         String phone = phoneField.getText();
         String durationText = durationField.getText();
         String service = serviceField.getText();
         String roomType = roomTypeField.getText();
 
-        if (name.isEmpty() || phone.isEmpty() || durationText.isEmpty() || service.isEmpty() || roomType.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Please fill in all fields.");
+        // التحقق من وجود قيم في الحقول الإلزامية
+        StringBuilder missingFields = new StringBuilder();
+
+        if (name.isEmpty()) {
+            missingFields.append("Resident Name, ");
+        }
+        if (phone.isEmpty()) {
+            missingFields.append("Phone Number, ");
+        }
+        if (durationText.isEmpty()) {
+            missingFields.append("Duration of Stay, ");
+        }
+        if (roomType.isEmpty()) {
+            missingFields.append("Room Type, ");
+        }
+
+        if (missingFields.length() > 0) {
+            // إزالة آخر فاصلة
+            missingFields.setLength(missingFields.length() - 2);
+            JOptionPane.showMessageDialog(frame, "Please fill in the following required fields: " + missingFields.toString());
             return;
+        }
+
+        // إذا كانت حقل الخدمة فارغًا، تعيينه إلى قيمة افتراضية
+        if (service.isEmpty()) {
+            service = "Bed & Breakfast"; // الخدمة الافتراضية
         }
 
         // التحقق من صحة المدخلات
@@ -135,8 +160,7 @@ public class ReceptionistGUI {
 
         try {
             int duration = Integer.parseInt(durationText);
-            Room room ;
-            room = RoomFactory.CreateRoomType(roomType);
+            Room room = RoomFactory.CreateRoomType(roomType);
 
             Resident resident = new Resident(name, phone, duration);
             room.setRoomType(roomType);
@@ -153,17 +177,22 @@ public class ReceptionistGUI {
                 displayArea.append("Duration: " + duration + " days\n");
                 displayArea.append("Service Type: " + service + "\n");
                 displayArea.append("Room Type: " + roomType + "\n");
+
+                // تفريغ الحقول بعد تسجيل الدخول
+               // clearInputFields();
             } else {
                 // في حالة عدم وجود غرفة
                 displayArea.setText("No available room for the requested type: " + roomType + ".\n");
             }
+            clearInputFields();
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(frame, "Please enter a valid number for duration.");
         }
     }
 
-
     private void handleEditResident() {
+        displayArea.setText(""); // تفريغ منطقة العرض قبل تنفيذ العملية
+
         String oldName = nameField.getText();  // الاسم القديم الذي سيتم تعديله
         String newName = JOptionPane.showInputDialog(frame, "Enter new name:");  // إدخال الاسم الجديد
         String newPhone = JOptionPane.showInputDialog(frame, "Enter new phone number:");  // إدخال رقم الهاتف الجديد
@@ -187,27 +216,66 @@ public class ReceptionistGUI {
             // تعديل المقيم في قاعدة البيانات
             receptionist.editResident(residentToEdit, newName, newPhone);
             JOptionPane.showMessageDialog(frame, "Resident info updated successfully.");
+
+            // تفريغ الحقول بعد التعديل
+            clearInputFields();
+            // تفريغ منطقة العرض بعد التعديل
+            displayArea.setText("");
         } else {
             JOptionPane.showMessageDialog(frame, "Resident not found.");
+            clearInputFields();  // تفريغ الحقول في حالة عدم العثور على المقيم
+            displayArea.setText("");  // تفريغ منطقة العرض
         }
     }
 
-
     private void handleDeleteResident() {
+        displayArea.setText(""); // تفريغ منطقة العرض قبل تنفيذ العملية
+
         String name = nameField.getText();
         if (name.isEmpty()) {
             JOptionPane.showMessageDialog(frame, "Please enter the resident's name to delete.");
             return;
         }
-       // Edit here [if name doesnot exist do not display the message box of resident deleted]
-        receptionist.deleteResident(name);  // تمرير 'frame' هنا
-        JOptionPane.showMessageDialog(frame, "Resident deleted.");
+
+        // التحقق مما إذا كان المقيم موجودًا في قاعدة البيانات
+        ProxyResidentDataFetcher proxyFetcher = new ProxyResidentDataFetcher();
+        Resident residentToDelete = null;
+        for (Resident resident : proxyFetcher.fetchResidents()) {
+            if (resident.getResidentName().equals(name)) {
+                residentToDelete = resident;
+                break;
+            }
+        }
+
+        if (residentToDelete != null) {
+            // حذف المقيم
+            receptionist.deleteResident(name);
+            JOptionPane.showMessageDialog(frame, "Resident deleted.");
+            clearInputFields();  // تفريغ الحقول بعد الحذف
+            displayArea.setText("");  // تفريغ منطقة العرض بعد الحذف
+        } else {
+            JOptionPane.showMessageDialog(frame, "Resident not found.");
+            clearInputFields();  // تفريغ الحقول في حالة عدم العثور على المقيم
+            displayArea.setText("");  // تفريغ منطقة العرض في حالة عدم العثور على المقيم
+        }
     }
 
-
     private void handleViewResidents() {
+        displayArea.setText(""); // تفريغ منطقة العرض قبل تنفيذ العملية
+
         String residentsData = receptionist.viewResidentDetails();
         displayArea.setText(residentsData);
+        // تفريغ الحقول بعد عرض البيانات
+        clearInputFields();
+    }
+
+    // دالة لتفريغ الـ input fields بعد الحذف أو عدم العثور على المقيم
+    private void clearInputFields() {
+        nameField.setText("");
+        phoneField.setText("");
+        durationField.setText("");
+        serviceField.setText("");
+        roomTypeField.setText("");
     }
 
     public static void main(String[] args) {
