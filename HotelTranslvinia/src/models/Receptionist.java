@@ -162,15 +162,6 @@ public class Receptionist extends User{
     public void deleteResident(String residentName) {
         // Step 1: Check if the resident exists in the database
         Resident residentToDelete =proxyResidentFetcher.getResidentFromDatabase(residentName);
-        //DEZEFT
-//        System.out.println("resident Name : " + residentToDelete.getResidentName() ); // true
-//        System.out.println( "resident phone: " +residentToDelete.getResidentPhone()); // true
-//        System.out.println("resident duration stay: " + residentToDelete.getDurationStay()); // true
-//        System.out.println("resident total_cost : " + residentToDelete.getTotalCost()); // true
-//        System.out.println("reisdent assigned room type : " + residentToDelete.getAssignedRoom().getRoomType());
-//        System.out.println("resident assigned room number"+ residentToDelete.getAssignedRoom().getRoomNum());
-//        System.out.println("resident assigned is : " + residentToDelete.getAssignedRoom().getAssignedResident().getResidentName());
-
 
         // Step 2: If resident doesn't exist, display a message and exit the method
         if (residentToDelete == null) {
@@ -180,32 +171,20 @@ public class Receptionist extends User{
 
         // Step 3: Get the assigned room of the resident
         Room choosedRoom = residentToDelete.getAssignedRoom();
-        if (choosedRoom == null)
-            System.out.println("I found the problem is here");
-
-        //DEZEFT
-//        System.out.println("Room hezen num : " + choosedRoom.getRoomNum() ); // true
-//        System.out.println("Room hezen type: " + choosedRoom.getRoomType() ); // true
-//        System.out.println("Room hezen price : " + choosedRoom.getRoomPrice() ); // true
-//        System.out.println("Room hezen is occupied : " + choosedRoom.getIsOccupied()); // true
-//        System.out.println("Room resident : " + choosedRoom.getAssignedResident().getResidentName());
 
 
-
-        // Step 4: If the resident has a room, update the room status to available
         if (choosedRoom == null) {
             System.out.println("That resident does not have room assigned.");
+            JOptionPane.showMessageDialog(null, "This resident has no such room");
             return;
         }
 
+        // Step 4: If the resident has a room, update the room status to available
         choosedRoom.setIsOccupied(0);
         choosedRoom.setAssignedResident(null);
         makeRoomAvailable(choosedRoom);
         // Step 5: Remove the resident from the database
         proxyResidentFetcher.deleteResidentFromDatabase(residentName);
-
-        // Step 6: Display success message
-        System.out.println("Resident and room status deleted successfully.");
     }
 
     //use proxy to fetch resident from database in a list

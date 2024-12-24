@@ -2,6 +2,7 @@ package models.ProxyFiles;
 
 import main.Database;
 import models.Factory.RoomFactory;
+import models.Resident;
 import models.Room;
 
 import java.sql.Connection;
@@ -27,12 +28,15 @@ public class RealRoomDataBaseService implements RoomDataBaseService {
                 String roomType = rs.getString("room_type");
                 int roomPrice = rs.getInt("room_price");
                 int isOccupied = rs.getInt("is_occupied");
+                String residentName = rs.getString("residentName");
 
                 Room room = roomFactory.CreateRoomType(roomType);
                 room.setRoomNum(roomNum);
-                room.setRoomPrice(roomPrice);
                 room.setIsOccupied(isOccupied);
-
+                Resident myresident = new Resident();
+                myresident.setResidentName(residentName);
+                myresident.setAssignedRoom(room);
+                room.setAssignedResident(myresident);
                 rooms.add(room);
             }
         } catch (Exception e) {

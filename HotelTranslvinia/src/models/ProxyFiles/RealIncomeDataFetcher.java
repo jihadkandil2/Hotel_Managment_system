@@ -15,10 +15,10 @@ public class RealIncomeDataFetcher implements IncomeDataFetcher{
                 query = "SELECT SUM(total_cost) AS income FROM resident WHERE checkInDate BETWEEN ? AND DATE_ADD(?, INTERVAL 7 DAY)";
                 break;
             case "monthly":
-                query = "SELECT SUM(total_cost) AS income FROM resident WHERE MONTH(checkInDate) = MONTH(?) AND YEAR(checkInDate) = YEAR(?)";
+                query = "SELECT SUM(total_cost) AS income FROM resident WHERE checkInDate BETWEEN ? AND DATE_ADD(?, INTERVAL 1 MONTH);";
                 break;
             case "annual":
-                query = "SELECT SUM(total_cost) AS income FROM resident WHERE YEAR(checkInDate) = YEAR(?)";
+                query = "SELECT SUM(total_cost) AS income FROM resident WHERE checkInDate BETWEEN ? AND DATE_ADD(?, INTERVAL 1 YEAR);";
                 break;
             default:
                 throw new IllegalArgumentException("Invalid range: " + range);
@@ -28,11 +28,7 @@ public class RealIncomeDataFetcher implements IncomeDataFetcher{
              PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setDate(1, startDate);
-            if (range.equalsIgnoreCase("weekly")) {
-                statement.setDate(2, startDate);
-            } else if (range.equalsIgnoreCase("monthly") || range.equalsIgnoreCase("annual")) {
-                statement.setDate(2, startDate); // Second date for month/year filtering
-            }
+            statement.setDate(2,startDate);
 
             ResultSet rs = statement.executeQuery();
             if (rs.next()) {

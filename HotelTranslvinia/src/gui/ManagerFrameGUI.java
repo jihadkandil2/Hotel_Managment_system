@@ -139,10 +139,10 @@ public class ManagerFrameGUI extends JFrame {
 
         fetchRoomsButton.addActionListener(e -> {
             List<Room> rooms = manager.fetchHotelsRooms();
-            DefaultTableModel model = new DefaultTableModel(new String[]{"Room Number", "Type", "Price", "Occupied"}, 0);
+            DefaultTableModel model = new DefaultTableModel(new String[]{"Room Number", "Type", "Price", "Occupied" , "Resident Name"}, 0);
 
             for (Room room : rooms) {
-                model.addRow(new Object[]{room.getRoomNum(), room.getRoomType(), room.getRoomPrice(), room.getIsOccupied()});
+                model.addRow(new Object[]{room.getRoomNum(), room.getRoomType(), room.getRoomPrice(), room.getIsOccupied(), room.getAssignedResident().getResidentName()});
             }
             roomTable.setModel(model);
         });

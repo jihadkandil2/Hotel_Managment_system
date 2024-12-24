@@ -32,7 +32,6 @@ public class RealReciptionistDataFetcher implements ReceptionistDataFetcher {
                 receptionist.setSalary(resultSet.getInt("salary"));
                 receptionists.add(receptionist);
             }
-
             System.out.println("Fetched receptionist data from the database.");
         } catch (Exception e) {
             System.err.println("Error fetching receptionist data: " + e.getMessage());
