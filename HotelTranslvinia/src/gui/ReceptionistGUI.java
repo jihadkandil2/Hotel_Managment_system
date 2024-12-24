@@ -29,11 +29,10 @@ public class ReceptionistGUI {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 600);
 
-        frame.setLayout(new BorderLayout()); // تقسيم الشاشة إلى أجزاء
+        frame.setLayout(new BorderLayout());
 
-        // الجزء العلوي لادخال البيانات
         JPanel inputPanel = new JPanel();
-        inputPanel.setLayout(new GridLayout(6, 2)); // زيادة عدد الصفوف في الشبكة
+        inputPanel.setLayout(new GridLayout(6, 2));
         inputPanel.setBorder(BorderFactory.createTitledBorder("Resident Information"));
 
         inputPanel.add(new JLabel("Resident Name:"));
@@ -49,23 +48,21 @@ public class ReceptionistGUI {
         inputPanel.add(durationField);
 
         inputPanel.add(new JLabel("Service Type (Full/Half/Bed & Breakfast):"));
-        serviceField = new JTextField(); // يمكن تركه فارغًا
+        serviceField = new JTextField();
         inputPanel.add(serviceField);
 
-        // إضافة حقل جديد لنوع الغرفة
+
         inputPanel.add(new JLabel("Room Type (Single/Double/Triple):"));
         roomTypeField = new JTextField();
         inputPanel.add(roomTypeField);
 
         frame.add(inputPanel, BorderLayout.NORTH);
 
-        // الجزء الأوسط لعرض البيانات
         displayArea = new JTextArea();
         displayArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(displayArea);
         frame.add(scrollPane, BorderLayout.CENTER);
 
-        // الجزء السفلي للأزرار
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout());
 
@@ -111,7 +108,7 @@ public class ReceptionistGUI {
     }
 
     private void handleCheckIn() {
-        displayArea.setText(""); // تفريغ منطقة العرض قبل تنفيذ العملية
+        displayArea.setText("");
 
         String name = nameField.getText();
         String phone = phoneField.getText();
@@ -119,7 +116,7 @@ public class ReceptionistGUI {
         String service = serviceField.getText();
         String roomType = roomTypeField.getText();
 
-        // التحقق من وجود قيم في الحقول الإلزامية
+
         StringBuilder missingFields = new StringBuilder();
 
         if (name.isEmpty()) {
@@ -136,18 +133,18 @@ public class ReceptionistGUI {
         }
 
         if (missingFields.length() > 0) {
-            // إزالة آخر فاصلة
+
             missingFields.setLength(missingFields.length() - 2);
             JOptionPane.showMessageDialog(frame, "Please fill in the following required fields: " + missingFields.toString());
             return;
         }
 
-        // إذا كانت حقل الخدمة فارغًا، تعيينه إلى قيمة افتراضية
+
         if (service.isEmpty()) {
-            service = "Bed & Breakfast"; // الخدمة الافتراضية
+            service = "Bed & Breakfast";
         }
 
-        // التحقق من صحة المدخلات
+
         if (!roomType.equalsIgnoreCase("Single") && !roomType.equalsIgnoreCase("Double") && !roomType.equalsIgnoreCase("Triple")) {
             JOptionPane.showMessageDialog(frame, "Please enter a valid room type (Single/Double/Triple).");
             return;
@@ -167,9 +164,9 @@ public class ReceptionistGUI {
             resident.setServiceType(service);
             resident.setAssignedRoom(room);
 
-            receptionist.residentCheckIn(resident);  // إرسال المقيم لتسجيل الدخول
+            receptionist.residentCheckIn(resident);
 
-            // التحقق مما إذا تم إضافة المقيم بنجاح
+
             if (resident.getTotalCost() > 0) {
                 displayArea.setText("Resident Checked In Successfully!\n");
                 displayArea.append("Name: " + name + "\n");
@@ -178,10 +175,9 @@ public class ReceptionistGUI {
                 displayArea.append("Service Type: " + service + "\n");
                 displayArea.append("Room Type: " + roomType + "\n");
 
-                // تفريغ الحقول بعد تسجيل الدخول
-               // clearInputFields();
+
             } else {
-                // في حالة عدم وجود غرفة
+
                 displayArea.setText("No available room for the requested type: " + roomType + ".\n");
             }
             clearInputFields();
@@ -191,19 +187,17 @@ public class ReceptionistGUI {
     }
 
     private void handleEditResident() {
-        displayArea.setText(""); // تفريغ منطقة العرض قبل تنفيذ العملية
+        displayArea.setText("");
 
-        String oldName = nameField.getText();  // الاسم القديم الذي سيتم تعديله
-        String newName = JOptionPane.showInputDialog(frame, "Enter new name:");  // إدخال الاسم الجديد
-        String newPhone = JOptionPane.showInputDialog(frame, "Enter new phone number:");  // إدخال رقم الهاتف الجديد
-
+        String oldName = nameField.getText();
+        String newName = JOptionPane.showInputDialog(frame, "Enter new name:");
+        String newPhone = JOptionPane.showInputDialog(frame, "Enter new phone number:");
         if (oldName.isEmpty() || newName.isEmpty() || newPhone.isEmpty()) {
             JOptionPane.showMessageDialog(frame, "Please enter the resident's name, new name, and new phone to edit.");
             return;
         }
 
-        // العثور على المقيم حسب الاسم القديم عبر ProxyResidentDataFetcher
-        ProxyResidentDataFetcher proxyFetcher = new ProxyResidentDataFetcher();  // تأكد من أن هذه الكائن يتم استخدامه
+        ProxyResidentDataFetcher proxyFetcher = new ProxyResidentDataFetcher();
         Resident residentToEdit = null;
         for (Resident resident : proxyFetcher.fetchResidents()) {
             if (resident.getResidentName().equals(oldName)) {
@@ -213,23 +207,20 @@ public class ReceptionistGUI {
         }
 
         if (residentToEdit != null) {
-            // تعديل المقيم في قاعدة البيانات
             receptionist.editResident(residentToEdit, newName, newPhone);
             JOptionPane.showMessageDialog(frame, "Resident info updated successfully.");
 
-            // تفريغ الحقول بعد التعديل
             clearInputFields();
-            // تفريغ منطقة العرض بعد التعديل
             displayArea.setText("");
         } else {
             JOptionPane.showMessageDialog(frame, "Resident not found.");
-            clearInputFields();  // تفريغ الحقول في حالة عدم العثور على المقيم
-            displayArea.setText("");  // تفريغ منطقة العرض
+            clearInputFields();
+            displayArea.setText("");
         }
     }
 
     private void handleDeleteResident() {
-        displayArea.setText(""); // تفريغ منطقة العرض قبل تنفيذ العملية
+        displayArea.setText("");
 
         String name = nameField.getText();
         if (name.isEmpty()) {
@@ -237,7 +228,6 @@ public class ReceptionistGUI {
             return;
         }
 
-        // التحقق مما إذا كان المقيم موجودًا في قاعدة البيانات
         ProxyResidentDataFetcher proxyFetcher = new ProxyResidentDataFetcher();
         Resident residentToDelete = null;
         for (Resident resident : proxyFetcher.fetchResidents()) {
@@ -248,28 +238,27 @@ public class ReceptionistGUI {
         }
 
         if (residentToDelete != null) {
-            // حذف المقيم
             receptionist.deleteResident(name);
             JOptionPane.showMessageDialog(frame, "Resident deleted.");
-            clearInputFields();  // تفريغ الحقول بعد الحذف
-            displayArea.setText("");  // تفريغ منطقة العرض بعد الحذف
+            clearInputFields();
+            displayArea.setText("");
         } else {
             JOptionPane.showMessageDialog(frame, "Resident not found.");
-            clearInputFields();  // تفريغ الحقول في حالة عدم العثور على المقيم
-            displayArea.setText("");  // تفريغ منطقة العرض في حالة عدم العثور على المقيم
+            clearInputFields();
+            displayArea.setText("");
         }
     }
 
     private void handleViewResidents() {
-        displayArea.setText(""); // تفريغ منطقة العرض قبل تنفيذ العملية
+        displayArea.setText("");
 
         String residentsData = receptionist.viewResidentDetails();
         displayArea.setText(residentsData);
-        // تفريغ الحقول بعد عرض البيانات
+
         clearInputFields();
     }
 
-    // دالة لتفريغ الـ input fields بعد الحذف أو عدم العثور على المقيم
+
     private void clearInputFields() {
         nameField.setText("");
         phoneField.setText("");
